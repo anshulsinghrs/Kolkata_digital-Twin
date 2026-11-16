@@ -85,3 +85,388 @@ kbd {
   pointer-events: none;
 }
 .loading { position: fixed; inset: 0; display: grid; place-items: center; font-size: 14px; color: #3a2f25; }
+
+/* =========================================================================
+   Stage 3: Live Telemetry Dashboard & HUD Styles
+   ========================================================================= */
+
+.telem-container {
+  position: fixed;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(94vw, 1100px);
+  z-index: 100;
+  pointer-events: auto;
+}
+
+.telem-ticker {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  background: rgba(18, 14, 10, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 215, 160, 0.22);
+  border-radius: 999px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.telem-ticker:hover {
+  background: rgba(24, 18, 12, 0.92);
+  border-color: rgba(255, 215, 160, 0.38);
+}
+
+.telem-ticker-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.telem-status-tag {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #ffd899;
+}
+
+.telem-ticker-metrics {
+  display: flex;
+  gap: 14px;
+  font-size: 12px;
+  color: #f1e4d3;
+}
+.ticker-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.ticker-item small {
+  font-size: 9px;
+  opacity: 0.65;
+  font-weight: 600;
+}
+
+.telem-ticker-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.telem-btn-refresh {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  border-radius: 999px;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.15s ease;
+}
+.telem-btn-refresh:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.telem-btn-toggle {
+  background: rgba(255, 215, 153, 0.18);
+  border: 1px solid rgba(255, 215, 153, 0.35);
+  color: #ffd899;
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.telem-btn-toggle:hover {
+  background: rgba(255, 215, 153, 0.3);
+}
+
+/* Pulses */
+.telem-pulse {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+.pulse-green {
+  background: #22c55e;
+  box-shadow: 0 0 8px #22c55e;
+  animation: pulse-ring 2s infinite;
+}
+.pulse-amber {
+  background: #f59e0b;
+  box-shadow: 0 0 8px #f59e0b;
+  animation: pulse-ring 2s infinite;
+}
+@keyframes pulse-ring {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { transform: scale(1.25); opacity: 1; }
+  100% { transform: scale(0.95); opacity: 0.8; }
+}
+
+/* Drawer */
+.telem-drawer {
+  margin-top: 10px;
+  background: rgba(16, 12, 8, 0.94);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 215, 160, 0.25);
+  border-radius: 16px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.65);
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.telem-drawer-header {
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+.telem-drawer-title {
+  margin: 0 0 4px 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffd899;
+}
+.telem-disclaimer {
+  font-size: 11px;
+  color: rgba(255, 240, 220, 0.72);
+  line-height: 1.4;
+}
+.telem-warn-pill {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 7px;
+  background: rgba(245, 158, 11, 0.25);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #fcd34d;
+  border-radius: 4px;
+  font-size: 10px;
+}
+
+.telem-tabs {
+  display: flex;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 3px;
+  border-radius: 8px;
+}
+.telem-tabs button {
+  background: transparent;
+  border: 0;
+  color: rgba(255, 255, 255, 0.65);
+  padding: 5px 11px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.telem-tabs button:hover {
+  color: #fff;
+}
+.telem-tabs button.active {
+  background: rgba(255, 215, 153, 0.25);
+  color: #ffd899;
+}
+
+.telem-drawer-content {
+  padding: 16px 20px;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 14px;
+}
+
+.telem-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 14px;
+}
+.telem-card-full {
+  grid-column: 1 / -1;
+}
+
+.telem-card-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffd899;
+  margin-bottom: 12px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.telem-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.telem-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+.telem-row:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.telem-row-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+.telem-label {
+  font-size: 12px;
+  color: #f5ede2;
+  font-weight: 500;
+}
+.telem-meta-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.telem-val {
+  font-size: 13px;
+  font-weight: 700;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: #fff;
+}
+
+.telem-row-sub {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  color: rgba(255, 240, 220, 0.55);
+}
+.telem-source {
+  max-width: 65%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.telem-notes {
+  font-size: 10px;
+  color: #e2ba80;
+  font-style: italic;
+}
+
+/* Category Badges */
+.cat-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.cat-measured {
+  background: rgba(14, 165, 233, 0.25);
+  border: 1px solid rgba(14, 165, 233, 0.55);
+  color: #7dd3fc;
+}
+.cat-modelled {
+  background: rgba(168, 85, 247, 0.25);
+  border: 1px solid rgba(168, 85, 247, 0.55);
+  color: #d8b4fe;
+}
+.cat-estimated {
+  background: rgba(245, 158, 11, 0.25);
+  border: 1px solid rgba(245, 158, 11, 0.55);
+  color: #fcd34d;
+}
+.cat-unavailable {
+  background: rgba(100, 116, 139, 0.25);
+  border: 1px solid rgba(100, 116, 139, 0.45);
+  color: #94a3b8;
+}
+
+/* Flights Table */
+.flights-table-wrap {
+  margin-top: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.flights-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+.flights-table th {
+  position: sticky;
+  top: 0;
+  background: #1c150e;
+  padding: 6px 10px;
+  text-align: left;
+  font-weight: 600;
+  color: #ffd899;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+.flights-table td {
+  padding: 6px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  color: #f1e4d3;
+}
+.flight-callsign-cell {
+  font-weight: 700;
+  color: #7dd3fc;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.flight-callsign-cell small {
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 400;
+}
+.telem-empty {
+  padding: 16px;
+  text-align: center;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  font-style: italic;
+}
+
+/* 3D Flight Billboard Label */
+.flight-billboard {
+  background: rgba(15, 23, 42, 0.88);
+  border: 1px solid rgba(125, 211, 252, 0.45);
+  border-radius: 6px;
+  padding: 3px 7px;
+  color: #fff;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  text-align: center;
+  white-space: nowrap;
+}
+.flight-callsign {
+  font-weight: 700;
+  color: #7dd3fc;
+}
+.flight-meta {
+  font-size: 9px;
+  color: #cbd5e1;
+}

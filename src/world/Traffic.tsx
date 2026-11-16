@@ -236,7 +236,7 @@ function createPedestrianGeometry(): THREE.BufferGeometry {
   return mergeGeometries(parts, false)!
 }
 
-export function Traffic({ data }: { data: SceneData }) {
+export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFactor?: number }) {
   const { cx, cz, dx, dz } = data.bridge
   const rotY = Math.atan2(-dz, dx) // Angle of bridge axis
 
@@ -661,13 +661,14 @@ export function Traffic({ data }: { data: SceneData }) {
         v.laneOffset = THREE.MathUtils.lerp(v.laneOffset, v.targetLane, dt * 2.5)
       }
 
-      // Safe Car-Following Rule (IDM Deceleration)
+      // Safe Car-Following Rule (IDM Deceleration) with live traffic speed factor
+      const effectiveTargetSpeed = v.targetSpeed * speedFactor
       const safeDistance = Math.max(3.0, 3.5 + v.speed * 0.75)
       if (minGap < safeDistance) {
         const targetV = Math.max(0, leadSpeed * Math.max(0, (minGap - 1.5) / safeDistance))
         v.speed = THREE.MathUtils.lerp(v.speed, targetV, dt * 4.0)
       } else {
-        v.speed = THREE.MathUtils.lerp(v.speed, v.targetSpeed, dt * 2.0)
+        v.speed = THREE.MathUtils.lerp(v.speed, effectiveTargetSpeed, dt * 2.0)
       }
 
       // Advance vehicle along road

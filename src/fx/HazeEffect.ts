@@ -47,6 +47,12 @@ export class HazeEffect extends Effect {
     })
     this.cam = camera
   }
+  setAtmosphere(density: number, max: number) {
+    const uD = this.uniforms.get('uDensity')
+    if (uD) uD.value = density
+    const uM = this.uniforms.get('uMax')
+    if (uM) uM.value = max
+  }
   update() {
     const c = this.cam as THREE.PerspectiveCamera
     this.uniforms.get('uProjInv')!.value.copy(c.projectionMatrixInverse)

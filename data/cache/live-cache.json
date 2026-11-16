@@ -1,0 +1,317 @@
+{
+  "serverTime": "2026-11-16T15:57:18.427Z",
+  "fromDiskCache": false,
+  "lastDiskCacheTime": null,
+  "weather": {
+    "temperature": {
+      "value": 24,
+      "unit": "°C",
+      "category": "MODELLED",
+      "source": "Open-Meteo Forecast (ECMWF/GFS numerical weather model)",
+      "timestamp": "2026-11-16T15:45:00.000Z",
+      "status": "ok"
+    },
+    "relativeHumidity": {
+      "value": 77,
+      "unit": "%",
+      "category": "MODELLED",
+      "source": "Open-Meteo Forecast (ECMWF/GFS numerical weather model)",
+      "timestamp": "2026-11-16T15:45:00.000Z",
+      "status": "ok"
+    },
+    "apparentTemperature": {
+      "value": 27.2,
+      "unit": "°C",
+      "category": "MODELLED",
+      "source": "Open-Meteo Forecast (Humidex / Wind Chill model)",
+      "timestamp": "2026-11-16T15:45:00.000Z",
+      "status": "ok"
+    },
+    "precipitation": {
+      "value": 0,
+      "unit": "mm",
+      "category": "MODELLED",
+      "source": "Open-Meteo Forecast (NWP grid precipitation)",
+      "timestamp": "2026-11-16T15:45:00.000Z",
+      "status": "ok"
+    },
+    "weatherCode": {
+      "value": 3,
+      "unit": "WMO code",
+      "category": "MODELLED",
+      "source": "Open-Meteo Forecast (WMO 4677 synoptic interpretation)",
+      "timestamp": "2026-11-16T15:45:00.000Z",
+      "status": "ok"
+    },
+    "windSpeed": {
+      "value": 3.3,
+      "unit": "km/h",
+      "category": "MODELLED",
+      "source": "Open-Meteo Forecast (10m boundary layer model)",
+      "timestamp": "2026-11-16T15:45:00.000Z",
+      "status": "ok"
+    },
+    "windDirection": {
+      "value": 49,
+      "unit": "°",
+      "category": "MODELLED",
+      "source": "Open-Meteo Forecast (10m boundary layer model)",
+      "timestamp": "2026-11-16T15:45:00.000Z",
+      "status": "ok"
+    }
+  },
+  "airQuality": {
+    "pm25_modelled": {
+      "value": 218.9,
+      "unit": "µg/m³",
+      "category": "MODELLED",
+      "source": "Open-Meteo Air Quality (Copernicus CAMS regional atmospheric model)",
+      "timestamp": "2026-11-16T15:00:00.000Z",
+      "status": "ok"
+    },
+    "pm10_modelled": {
+      "value": 242.1,
+      "unit": "µg/m³",
+      "category": "MODELLED",
+      "source": "Open-Meteo Air Quality (Copernicus CAMS regional atmospheric model)",
+      "timestamp": "2026-11-16T15:00:00.000Z",
+      "status": "ok"
+    },
+    "usAqi_modelled": {
+      "value": 268,
+      "unit": "US AQI",
+      "category": "MODELLED",
+      "source": "Open-Meteo Air Quality (EPA AQI standard computation)",
+      "timestamp": "2026-11-16T15:00:00.000Z",
+      "status": "ok"
+    },
+    "europeanAqi_modelled": {
+      "value": 132,
+      "unit": "EAQI",
+      "category": "MODELLED",
+      "source": "Open-Meteo Air Quality (EEA European Air Quality Index)",
+      "timestamp": "2026-11-16T15:00:00.000Z",
+      "status": "ok"
+    },
+    "cpcb_pm25_measured": {
+      "value": null,
+      "unit": "µg/m³",
+      "category": "UNAVAILABLE",
+      "source": "CPCB / WBPCB Ground Station (data.gov.in CAAQMS)",
+      "timestamp": null,
+      "status": "unconfigured",
+      "notes": "No data.gov.in API key supplied. Provide DATAGOVIN_API_KEY in .env to stream measured ground station data. Units checked against official CPCB dashboard: µg/m³."
+    }
+  },
+  "traffic": {
+    "tomtomSpeed": {
+      "value": null,
+      "unit": "km/h",
+      "category": "UNAVAILABLE",
+      "source": "TomTom Traffic Flow API",
+      "timestamp": null,
+      "status": "unconfigured",
+      "notes": "No TOMTOM_API_KEY supplied in .env. Never filling gaps with invented values; simulation continues with physical baseline road limits."
+    }
+  },
+  "flights": {
+    "activeFlights": {
+      "value": [
+        {
+          "icao24": "801749",
+          "callsign": "IGO511V",
+          "originCountry": "India",
+          "timePosition": 1794844628,
+          "altitudeMeters": 23,
+          "velocityKmph": 281.2,
+          "headingDeg": 6,
+          "verticalRateMps": 0,
+          "onGround": false,
+          "lat": 22.6539,
+          "lon": 88.4477,
+          "worldX": 10371,
+          "worldZ": -7659,
+          "distKmFromAirport": 0.1
+        },
+        {
+          "icao24": "801806",
+          "callsign": "IGO6517",
+          "originCountry": "India",
+          "timePosition": 1794844624,
+          "altitudeMeters": 15,
+          "velocityKmph": 7.4,
+          "headingDeg": 276,
+          "verticalRateMps": null,
+          "onGround": true,
+          "lat": 22.6566,
+          "lon": 88.4461,
+          "worldX": 10206,
+          "worldZ": -7959,
+          "distKmFromAirport": 0.2
+        },
+        {
+          "icao24": "801608",
+          "callsign": "VTICN",
+          "originCountry": "India",
+          "timePosition": 1794844551,
+          "altitudeMeters": null,
+          "velocityKmph": 3.7,
+          "headingDeg": 188,
+          "verticalRateMps": null,
+          "onGround": true,
+          "lat": 22.6498,
+          "lon": 88.4423,
+          "worldX": 9816,
+          "worldZ": -7202,
+          "distKmFromAirport": 0.7
+        },
+        {
+          "icao24": "8008d4",
+          "callsign": "FLW ME 1",
+          "originCountry": "India",
+          "timePosition": 1794844634,
+          "altitudeMeters": null,
+          "velocityKmph": 19.4,
+          "headingDeg": 129,
+          "verticalRateMps": null,
+          "onGround": true,
+          "lat": 22.6468,
+          "lon": 88.4424,
+          "worldX": 9826,
+          "worldZ": -6868,
+          "distKmFromAirport": 1
+        },
+        {
+          "icao24": "801833",
+          "callsign": "AKJ2008",
+          "originCountry": "India",
+          "timePosition": 1794844369,
+          "altitudeMeters": 15,
+          "velocityKmph": 3.7,
+          "headingDeg": 191,
+          "verticalRateMps": null,
+          "onGround": true,
+          "lat": 22.6446,
+          "lon": 88.4416,
+          "worldX": 9744,
+          "worldZ": -6624,
+          "distKmFromAirport": 1.2
+        },
+        {
+          "icao24": "80187a",
+          "callsign": "IGO82RC",
+          "originCountry": "India",
+          "timePosition": 1794844625,
+          "altitudeMeters": null,
+          "velocityKmph": 0,
+          "headingDeg": 186,
+          "verticalRateMps": null,
+          "onGround": true,
+          "lat": 22.6408,
+          "lon": 88.4412,
+          "worldX": 9703,
+          "worldZ": -6200,
+          "distKmFromAirport": 1.6
+        },
+        {
+          "icao24": "8008c6",
+          "callsign": "FLW ME 4",
+          "originCountry": "India",
+          "timePosition": 1794844563,
+          "altitudeMeters": null,
+          "velocityKmph": 24.1,
+          "headingDeg": 203,
+          "verticalRateMps": null,
+          "onGround": true,
+          "lat": 22.6452,
+          "lon": 88.4334,
+          "worldX": 8901,
+          "worldZ": -6690,
+          "distKmFromAirport": 1.7
+        },
+        {
+          "icao24": "8008c7",
+          "callsign": "FLW ME 2",
+          "originCountry": "India",
+          "timePosition": 1794844522,
+          "altitudeMeters": null,
+          "velocityKmph": 13,
+          "headingDeg": 262,
+          "verticalRateMps": null,
+          "onGround": true,
+          "lat": 22.6402,
+          "lon": 88.439,
+          "worldX": 9477,
+          "worldZ": -6134,
+          "distKmFromAirport": 1.8
+        },
+        {
+          "icao24": "70605a",
+          "callsign": "KAC419",
+          "originCountry": "Kuwait",
+          "timePosition": 1794844635,
+          "altitudeMeters": 10668,
+          "velocityKmph": 991.7,
+          "headingDeg": 100,
+          "verticalRateMps": 0,
+          "onGround": false,
+          "lat": 22.6459,
+          "lon": 88.6324,
+          "worldX": 29355,
+          "worldZ": -6768,
+          "distKmFromAirport": 19.1
+        },
+        {
+          "icao24": "8018c4",
+          "callsign": "AKJ1125",
+          "originCountry": "India",
+          "timePosition": 1794844633,
+          "altitudeMeters": 1349,
+          "velocityKmph": 438.3,
+          "headingDeg": 97,
+          "verticalRateMps": -5.8,
+          "onGround": false,
+          "lat": 22.4934,
+          "lon": 88.2908,
+          "worldX": -5756,
+          "worldZ": 10208,
+          "distKmFromAirport": 24.1
+        }
+      ],
+      "unit": "aircraft",
+      "category": "MEASURED",
+      "source": "OpenSky Network (Ground ADS-B sensor receivers)",
+      "timestamp": "2026-11-16T15:57:16.000Z",
+      "status": "ok",
+      "notes": "10 aircraft tracked within 50km terminal radar sector of Kolkata Airport (CCU/VECC)"
+    }
+  },
+  "derived": {
+    "hazeDensity": {
+      "value": 0.000466,
+      "unit": "extinction coef (1/m)",
+      "category": "ESTIMATED",
+      "source": "Hänel hygroscopic aerosol swelling model [PM2.5 + RH]",
+      "timestamp": "2026-11-16T15:57:17.776Z",
+      "status": "ok",
+      "notes": "Extinction derived from live PM2.5 (218.9 µg/m³) and RH (77%)"
+    },
+    "hazeMaxExtinction": {
+      "value": 0.99,
+      "unit": "opacity ratio",
+      "category": "ESTIMATED",
+      "source": "Atmospheric optical depth ceiling",
+      "timestamp": "2026-11-16T15:57:17.776Z",
+      "status": "ok"
+    },
+    "trafficSpeedFactor": {
+      "value": 1,
+      "unit": "multiplier",
+      "category": "ESTIMATED",
+      "source": "Default road network speed limits",
+      "timestamp": "2026-11-16T15:57:17.776Z",
+      "status": "ok",
+      "notes": "No TomTom key; no invented speed ratio. Baseline road network limits apply."
+    }
+  }
+}

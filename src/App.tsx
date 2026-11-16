@@ -18,6 +18,10 @@ import { makeShots, heroGhat, type Shot } from './shots'
 import { WATER_Y } from './world/constants'
 import { MovementController, type NavMode } from './world/MovementController'
 import { Traffic } from './world/Traffic'
+import { Flights } from './world/Flights'
+import { useLiveData } from './live/useLiveData'
+import { LiveTelemetryOverlay } from './ui/LiveTelemetryOverlay'
+import type { FlightInfo } from './live/types'
 
 const MAX_DPR = 1.25
 const params = new URLSearchParams(location.search)
@@ -135,6 +139,10 @@ function World({
   setMode,
   speed,
   setSpeed,
+  speedFactor = 1.0,
+  flights = [],
+  hazeDensity = 0.00023,
+  hazeMax = 0.96,
 }: {
   data: SceneData
   shot: Shot
@@ -143,6 +151,10 @@ function World({
   setMode: (mode: NavMode) => void
   speed: number
   setSpeed: React.Dispatch<React.SetStateAction<number>>
+  speedFactor?: number
+  flights?: FlightInfo[]
+  hazeDensity?: number
+  hazeMax?: number
 }) {
   const focus = useRef(new THREE.Vector3())
   const riverShape = useMemo(() => new THREE.Shape(toPts(data.river).map((p) => new THREE.Vector2(p[0], -p[1]))), [data])
@@ -160,7 +172,8 @@ function World({
       <Trees data={data} />
       <Context data={data} />
       <Bridge center={[data.bridge.cx, data.bridge.cz]} dir={[data.bridge.dx, data.bridge.dz]} />
-      <Traffic data={data} />
+      <Traffic data={data} speedFactor={speedFactor} />
+      <Flights flights={flights} />
       <CameraRig
         shot={shot}
         focus={focus}
@@ -170,7 +183,7 @@ function World({
         speed={speed}
         setSpeed={setSpeed}
       />
-      <Effects focus={focus} />
+      <Effects focus={focus} hazeDensity={hazeDensity} hazeMax={hazeMax} />
       <Probe onFreeze={onFreeze} />
     </>
   )
@@ -185,6 +198,14 @@ export function App() {
   const [dpr, setDpr] = useState(Math.min(window.devicePixelRatio || 1, MAX_DPR))
   const fixedDpr = params.has('dpr')
   const [frozen, setFrozen] = useState(false)
+
+  // Stage 3: Live telemetry streaming with disk cache fallback
+  const { telemetry, loading: telemLoading, error: telemError, refresh: telemRefresh } = useLiveData(20_000)
+
+  const hazeDensity = telemetry?.derived.hazeDensity.value ?? 0.00023
+  const hazeMax = telemetry?.derived.hazeMaxExtinction.value ?? 0.96
+  const speedFactor = telemetry?.derived.trafficSpeedFactor.value ?? 1.0
+  const flights = telemetry?.flights.activeFlights.value ?? []
 
   useEffect(() => {
     fetch('/api/scene')
@@ -214,6 +235,13 @@ export function App() {
   const h = data.meta.heights
   return (
     <>
+      <LiveTelemetryOverlay
+        telemetry={telemetry}
+        loading={telemLoading}
+        error={telemError}
+        onRefresh={telemRefresh}
+      />
+
       <Canvas
         shadows
         flat
@@ -237,6 +265,10 @@ export function App() {
             setMode={setMode}
             speed={speed}
             setSpeed={setSpeed}
+            speedFactor={speedFactor}
+            flights={flights}
+            hazeDensity={hazeDensity}
+            hazeMax={hazeMax}
           />
         </Suspense>
       </Canvas>

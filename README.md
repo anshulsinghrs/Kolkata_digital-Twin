@@ -2,11 +2,24 @@
 
 A real-time 3D Digital Twin of Kolkata and Howrah centred on the iconic **Howrah Bridge (Rabindra Setu)** and the **Hooghly Riverfront** (22.5851° N, 88.3468° E).
 
-Features full **Stage 1 (high-fidelity photorealistic visual twin)** and **Stage 2 (citywide multi-agent life & mixed traffic simulation)**, with dual-engine support for **WebGL (Three.js / React Three Fiber)** and **Unity 6 (Universal Render Pipeline)**.
+Features **Stage 1 (high-fidelity photorealistic visual twin)**, **Stage 2 (citywide multi-agent life & mixed traffic simulation)**, and **Stage 3 (live telemetry streaming with disk caching, Open-Meteo, OpenSky, CPCB, and TomTom)**.
 
 ---
 
 ## 🌟 Key Features
+
+* **Stage 3 Live Telemetry Streaming & Disk Cache Resilience**:
+  * **Zero Downtime Fallback**: Server caches all live feeds directly to disk (`data/cache/live-cache.json`). If any upstream provider times out, fails, or rate-limits, the server immediately serves the last known good copy with explicit cache timestamps.
+  * **Open-Meteo Weather & Wind (No Key Required)**: Real-time temperature (°C), relative humidity (%), apparent temperature, precipitation, and boundary layer 10 m wind speed/direction. Tagged `[MODELLED]`.
+  * **Open-Meteo Air Quality (No Key Required)**: Real-time PM2.5 (µg/m³), PM10, European AQI, and US AQI from the Copernicus Atmosphere Monitoring Service (CAMS). Tagged `[MODELLED]`.
+  * **CPCB / data.gov.in Ground Station Feed (Key Optional)**: Direct integration with Continuous Ambient Air Quality Monitoring Stations (CAAQMS) across Kolkata (Fort William, Victoria Memorial, etc.). Units verified against official CPCB NAQI dashboard (`µg/m³`). Tagged `[MEASURED]`.
+  * **TomTom Traffic Flow API (Key Optional)**: Live vehicle speeds and congestion ratios along Howrah Bridge and Strand Road corridors. Tagged `[MEASURED]`.
+  * **OpenSky Network Live Flights**: Real-time ADS-B transponder messages tracking aircraft within the 50 km terminal radar control area of Netaji Subhash Chandra Bose International Airport (CCU / VECC at 22.6547° N, 88.4467° E). Tagged `[MEASURED]`.
+  * **Physical & Visual Reactive Coupling**:
+    * **Dynamic Haze Thickness**: Haze extinction coefficient follows Hänel's hygroscopic aerosol swelling model derived from live PM2.5 and relative humidity.
+    * **Dynamic Traffic Speed**: Multi-agent simulation speeds dynamically follow real-time TomTom flow ratios.
+    * **3D Airborne Aircraft**: Live flights are rendered directly in the 3D airspace above Kolkata with altitude, speed, and callsign radar tags.
+  * **Strict Data Provenance**: Every metric displays its source, measurement time, and classification (`[MEASURED]`, `[MODELLED]`, or `[ESTIMATED]`). Gaps are never filled with invented values.
 
 * **Complete City OpenStreetMap (OSM) Road Network**:
   * 125 km of real OpenStreetMap road polylines across Kolkata and Howrah.

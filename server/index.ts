@@ -1,18 +1,36 @@
 // The only process that touches the outside world or secrets.
-// Stage 1 needs no keys; the scene file is fetched once by scripts/ and served from disk here.
+// Stage 3: Live telemetry streaming with disk cache fallback, Open-Meteo, OpenSky, CPCB, and TomTom.
 import 'dotenv/config'
 import express from 'express'
 import compression from 'compression'
 import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
+import {
+  startLiveTelemetryPolling,
+  getLiveTelemetry,
+  fetchWeather,
+  fetchAirQuality,
+  fetchCPCB,
+  fetchTraffic,
+  fetchFlights,
+} from './liveData'
 
 const app = express()
 app.use(compression())
 
 const SCENE = resolve('data/scene.json')
 
+// Start live data fetching and disk cache daemon
+startLiveTelemetryPolling()
+
 app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, scene: existsSync(SCENE) })
+  const telemetry = getLiveTelemetry()
+  res.json({
+    ok: true,
+    scene: existsSync(SCENE),
+    fromDiskCache: telemetry.fromDiskCache,
+    serverTime: telemetry.serverTime,
+  })
 })
 
 app.get('/api/scene', (_req, res) => {
@@ -22,6 +40,51 @@ app.get('/api/scene', (_req, res) => {
   }
   res.setHeader('Cache-Control', 'no-cache')
   res.sendFile(SCENE)
+})
+
+// Stage 3 Live Telemetry Endpoints
+app.get('/api/live', (_req, res) => {
+  res.setHeader('Cache-Control', 'no-cache')
+  res.json(getLiveTelemetry())
+})
+
+app.get('/api/live/weather', (_req, res) => {
+  res.setHeader('Cache-Control', 'no-cache')
+  const t = getLiveTelemetry()
+  res.json({ serverTime: t.serverTime, weather: t.weather })
+})
+
+app.get('/api/live/air-quality', (_req, res) => {
+  res.setHeader('Cache-Control', 'no-cache')
+  const t = getLiveTelemetry()
+  res.json({ serverTime: t.serverTime, airQuality: t.airQuality })
+})
+
+app.get('/api/live/traffic', (_req, res) => {
+  res.setHeader('Cache-Control', 'no-cache')
+  const t = getLiveTelemetry()
+  res.json({ serverTime: t.serverTime, traffic: t.traffic, derived: t.derived })
+})
+
+app.get('/api/live/flights', (_req, res) => {
+  res.setHeader('Cache-Control', 'no-cache')
+  const t = getLiveTelemetry()
+  res.json({ serverTime: t.serverTime, flights: t.flights })
+})
+
+app.post('/api/live/refresh', async (_req, res) => {
+  try {
+    await Promise.allSettled([
+      fetchWeather(),
+      fetchAirQuality(),
+      fetchCPCB(),
+      fetchTraffic(),
+      fetchFlights(),
+    ])
+    res.json({ ok: true, data: getLiveTelemetry() })
+  } catch (err: any) {
+    res.status(500).json({ error: err.message })
+  }
 })
 
 if (process.env.NODE_ENV === 'production') {
