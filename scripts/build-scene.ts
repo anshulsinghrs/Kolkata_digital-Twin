@@ -313,8 +313,8 @@ function addBuilding(id: number, tags: Record<string, string>, outer: Pt[], hole
   let kind = KIND.normal
   if (tags.building === 'train_station') kind = KIND.station
   else if (['roof', 'shed', 'warehouse', 'industrial', 'hut'].includes(tags.building) || tags.shelter === 'yes') kind = KIND.shed
-  // nothing stands in the bridge's path except the bridge
-  if (kind === KIND.normal && inBridgeCorridor(c, 520, 22)) return
+  // Hand-built bridge spans +/- 335 m, width 16 m: do not carve out station approach or Strand Road
+  if (kind === KIND.normal && inBridgeCorridor(c, 340, 16)) return
   let h: number
   let hs: number
   const th = parseFloat(tags.height || '')
@@ -492,7 +492,7 @@ const freeAround = (x: number, z: number, rad: number) => {
 let tseed = 7
 const rnd = () => hash(tseed++, 99)
 const addTree = (x: number, z: number, scale: number, minGap = 5) => {
-  if (inBridgeCorridor([x, z], 540, 30)) return
+  if (inBridgeCorridor([x, z], 340, 18)) return
   for (let i = treePts.length - 1; i >= 0 && i > treePts.length - 400; i--) {
     const q = treePts[i]
     if (Math.abs(q[0] - x) < minGap && Math.abs(q[1] - z) < minGap) return
@@ -588,7 +588,7 @@ for (let j = 0; j < MN; j++)
         }
       }
     if (empty && parkPolys.some((pp) => pp.length > 2 && inPoly(x, z, pp))) empty = false
-    if (empty && inBridgeCorridor([x, z], 560, 40)) empty = false
+    if (empty && inBridgeCorridor([x, z], 350, 20)) empty = false
     maskBytes[j * MN + i] = empty ? 255 : 0
   }
 

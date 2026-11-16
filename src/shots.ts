@@ -3,7 +3,7 @@ import { toPts } from './world/types'
 import { DECK_Y } from './world/constants'
 
 export type Shot = { id: string; label: string; position: [number, number, number]; target: [number, number, number]; fov: number }
-export const SHOT_IDS = ['aerial', 'river', 'deck', 'ghat'] as const
+export const SHOT_IDS = ['aerial', 'river', 'deck', 'ghat', 'station'] as const
 
 /** Bridge-relative helper: s metres east along the axis, l metres to the south of it. */
 export function bridgeFrame(data: SceneData) {
@@ -51,5 +51,6 @@ export function makeShots(data: SceneData): Shot[] {
     { id: 'river', label: 'River', position: [rx, 0.6, rz], target: [rtx, 30, rtz], fov: 46 },
     { id: 'deck', label: 'Bridge deck', position: [dx, DECK_Y + 4.0, dz], target: [dtx, DECK_Y + 30, dtz], fov: 58 },
     { id: 'ghat', label: 'Ghat', position: [gx, 1.72, gz], target: [gtx, 13, gtz], fov: 60 },
+    { id: 'station', label: 'Howrah Station', position: [-290, 15, 156], target: [-332, 12, 138], fov: 52 },
   ]
 }

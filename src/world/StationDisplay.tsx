@@ -26,11 +26,13 @@ export function StationDisplay({
   }, [trains, page])
 
   // Howrah Station terminal eastern entrance portico coords:
-  // x = -316.5 (front façade of station building), y = 14 (above main entrance portico), z = 85 (facing east toward Hooghly river & bridge)
-  const pos: [number, number, number] = [-316.5, 14, 85]
+  // Positioned along the grand entrance portico facing east towards the station approach plaza and Hooghly River
+  const pos: [number, number, number] = [-332.0, 12.0, 138.0]
+  // Facade normal facing outward towards Howrah Station plaza: atan2(0.422, 0.907) = 0.435 rad (approx 25 deg)
+  const facadeRotY = 0.435
 
   return (
-    <group position={pos} rotation={[0, Math.PI / 2, 0]}>
+    <group position={pos} rotation={[0, facadeRotY, 0]}>
       {/* Heavy Steel Gantry Mounting Structure */}
       <mesh position={[0, -5, -7]}>
         <cylinderGeometry args={[0.3, 0.35, 11, 8]} />

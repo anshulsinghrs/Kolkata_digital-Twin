@@ -334,7 +334,7 @@ function bankGeometry(data: SceneData, ghatSpots: { x: number; z: number; half: 
     let seenGhat = false
     for (let i = 0; i < pts.length - 1; i++) {
       const j = i + 1
-      const far = Math.max(Math.abs(pts[i][0]), Math.abs(pts[i][1])) > 1500
+      const far = Math.max(Math.abs(pts[i][0]), Math.abs(pts[i][1])) > 2500
       const hint: V3 = [nrm[i][0], 1.2, nrm[i][1]]
       if (isGhat[i] && isGhat[j]) {
         // broad landing, then steps down into the water

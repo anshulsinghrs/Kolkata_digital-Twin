@@ -1,7 +1,7 @@
 // One world frame for everything: metres, x east, y up, z south, origin at CENTER.
 export const CENTER = { lat: 22.5851, lon: 88.3468 }
 export const HALF = 1000 // hero square is 2 km x 2 km
-export const MARGIN = 350 // context ring fetched beyond the square so the horizon is not a cut edge
+export const MARGIN = 1500 // context ring fetched beyond the square so surrounding buildings & roads are fully mapped
 const R = 6378137
 const D2R = Math.PI / 180
 const KX = R * D2R * Math.cos(CENTER.lat * D2R)
