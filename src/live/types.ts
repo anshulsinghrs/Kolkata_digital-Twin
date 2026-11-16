@@ -47,6 +47,35 @@ export interface TomTomFlowData {
   confidence: number
 }
 
+export interface TrainStationDeparture {
+  trainNumber: string
+  trainName: string
+  trainType: 'Vande Bharat' | 'Rajdhani' | 'Shatabdi' | 'Superfast' | 'Express' | 'Mail' | 'EMU Local'
+  destination: string
+  origin: string
+  platform: string
+  type: 'DEPARTURE' | 'ARRIVAL'
+  scheduledTime: string
+  expectedTime: string
+  delayMinutes: number
+  status: 'On Time' | 'Boarding' | 'Departed' | 'Arrived' | 'Delayed' | 'Approaching'
+  category: DataCategory
+  source: string
+  timestamp: string
+}
+
+export interface HowrahStationData {
+  stationCode: string
+  stationName: string
+  totalPlatforms: number
+  activeServices: TrainStationDeparture[]
+  source: string
+  category: DataCategory
+  timestamp: string
+  status: 'ok' | 'stale' | 'unconfigured' | 'error'
+  notes?: string
+}
+
 export interface LiveTelemetry {
   serverTime: string
   fromDiskCache: boolean
@@ -72,6 +101,9 @@ export interface LiveTelemetry {
   }
   flights: {
     activeFlights: TelemetryField<FlightInfo[]>
+  }
+  station: {
+    howrahTrains: TelemetryField<HowrahStationData>
   }
   derived: {
     hazeDensity: TelemetryField<number>

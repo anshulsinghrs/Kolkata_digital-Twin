@@ -71,7 +71,7 @@ export function LiveTelemetryOverlay({
   onRefresh: () => void
 }) {
   const [open, setOpen] = useState(false)
-  const [activeTab, setActiveTab] = useState<'all' | 'weather' | 'air' | 'traffic' | 'flights'>('all')
+  const [activeTab, setActiveTab] = useState<'all' | 'weather' | 'air' | 'traffic' | 'flights' | 'trains'>('all')
 
   if (!telemetry) {
     return (
@@ -82,8 +82,12 @@ export function LiveTelemetryOverlay({
     )
   }
 
-  const { weather, airQuality, traffic, flights, derived, fromDiskCache, lastDiskCacheTime } = telemetry
+  const { weather, airQuality, traffic, flights, station, derived, fromDiskCache, lastDiskCacheTime } = telemetry
   const flightCount = flights.activeFlights.value?.length || 0
+  const trainList = station?.howrahTrains?.value?.activeServices || []
+  const trainCount = trainList.length
+  const premierTrain = trainList.find((t) => t.status === 'Boarding') || trainList[0]
+
   const pm25Val = airQuality.cpcb_pm25_measured.value?.avg ?? airQuality.pm25_modelled.value
   const tempVal = weather.temperature.value
   const rhVal = weather.relativeHumidity.value
@@ -117,8 +121,14 @@ export function LiveTelemetryOverlay({
               </span>
             )}
             <span className="ticker-item">
-              ✈ CCU Flights: {flightCount} <small>[MEASURED]</small>
+              ✈ Flights: {flightCount} <small>[MEASURED]</small>
             </span>
+            {premierTrain && (
+              <span className="ticker-item ticker-train-item">
+                🚂 HWH: {premierTrain.trainNumber} ({premierTrain.platform} {premierTrain.status}){' '}
+                <small>[{premierTrain.category}]</small>
+              </span>
+            )}
           </span>
         </div>
 
@@ -186,6 +196,12 @@ export function LiveTelemetryOverlay({
                 onClick={() => setActiveTab('flights')}
               >
                 Flights ({flightCount})
+              </button>
+              <button
+                className={activeTab === 'trains' ? 'active' : ''}
+                onClick={() => setActiveTab('trains')}
+              >
+                🚂 Trains ({trainCount})
               </button>
             </div>
           </div>
@@ -273,6 +289,76 @@ export function LiveTelemetryOverlay({
                     label="Active Traffic Simulation Velocity Factor"
                     field={derived.trafficSpeedFactor}
                   />
+                </div>
+              </section>
+            )}
+
+            {/* Howrah Railway Station Live Trains */}
+            {(activeTab === 'all' || activeTab === 'trains') && (
+              <section className="telem-card telem-card-full">
+                <div className="telem-card-title">
+                  <span>🏛 Howrah Junction Railway Station (HWH) — Live Operations & Passenger Information</span>
+                  <CategoryBadge category={station?.howrahTrains?.category || 'MODELLED'} />
+                </div>
+                <div className="telem-card-body">
+                  <div className="telem-row">
+                    <div className="telem-row-header">
+                      <span className="telem-label">Station Terminals</span>
+                      <span className="telem-val">Howrah Junction (23 Platforms • Eastern & South Eastern Railway)</span>
+                    </div>
+                    <div className="telem-row-sub">
+                      <span>{station?.howrahTrains?.source || 'Indian Railways Howrah Division'}</span>
+                      <span>🕒 {station?.howrahTrains?.timestamp ? new Date(station.howrahTrains.timestamp).toLocaleTimeString() : '—'}</span>
+                    </div>
+                    {station?.howrahTrains?.notes && (
+                      <div className="telem-notes">ℹ {station.howrahTrains.notes}</div>
+                    )}
+                  </div>
+
+                  {trainList.length > 0 ? (
+                    <div className="flights-table-wrap">
+                      <table className="flights-table">
+                        <thead>
+                          <tr>
+                            <th>Train No. & Name</th>
+                            <th>Type</th>
+                            <th>Sched / Actual</th>
+                            <th>Direction</th>
+                            <th>Platform</th>
+                            <th>Status</th>
+                            <th>Classification</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {trainList.map((t) => (
+                            <tr key={t.trainNumber}>
+                              <td className="flight-callsign-cell">
+                                <span className="train-number-tag">{t.trainNumber}</span> {t.trainName}
+                              </td>
+                              <td>
+                                <span className={`train-type-badge type-${t.trainType.toLowerCase().replace(/\s+/g, '')}`}>
+                                  {t.trainType}
+                                </span>
+                              </td>
+                              <td>{t.scheduledTime}</td>
+                              <td>{t.type}</td>
+                              <td className="train-plat-cell">{t.platform}</td>
+                              <td>
+                                <span className={`train-status-pill status-${t.status.toLowerCase().replace(/\s+/g, '')}`}>
+                                  {t.status}
+                                </span>
+                              </td>
+                              <td>
+                                <CategoryBadge category={t.category} />
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="telem-empty">Connecting to Howrah Station dispatch feed…</div>
+                  )}
                 </div>
               </section>
             )}

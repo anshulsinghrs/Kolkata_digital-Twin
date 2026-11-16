@@ -19,9 +19,10 @@ import { WATER_Y } from './world/constants'
 import { MovementController, type NavMode } from './world/MovementController'
 import { Traffic } from './world/Traffic'
 import { Flights } from './world/Flights'
+import { StationDisplay } from './world/StationDisplay'
 import { useLiveData } from './live/useLiveData'
 import { LiveTelemetryOverlay } from './ui/LiveTelemetryOverlay'
-import type { FlightInfo } from './live/types'
+import type { FlightInfo, TrainStationDeparture } from './live/types'
 
 const MAX_DPR = 1.25
 const params = new URLSearchParams(location.search)
@@ -141,6 +142,7 @@ function World({
   setSpeed,
   speedFactor = 1.0,
   flights = [],
+  trains = [],
   hazeDensity = 0.00023,
   hazeMax = 0.96,
 }: {
@@ -153,6 +155,7 @@ function World({
   setSpeed: React.Dispatch<React.SetStateAction<number>>
   speedFactor?: number
   flights?: FlightInfo[]
+  trains?: TrainStationDeparture[]
   hazeDensity?: number
   hazeMax?: number
 }) {
@@ -173,6 +176,7 @@ function World({
       <Context data={data} />
       <Bridge center={[data.bridge.cx, data.bridge.cz]} dir={[data.bridge.dx, data.bridge.dz]} />
       <Traffic data={data} speedFactor={speedFactor} />
+      <StationDisplay trains={trains} />
       <Flights flights={flights} />
       <CameraRig
         shot={shot}
@@ -206,6 +210,7 @@ export function App() {
   const hazeMax = telemetry?.derived.hazeMaxExtinction.value ?? 0.96
   const speedFactor = telemetry?.derived.trafficSpeedFactor.value ?? 1.0
   const flights = telemetry?.flights.activeFlights.value ?? []
+  const trains = telemetry?.station?.howrahTrains?.value?.activeServices ?? []
 
   useEffect(() => {
     fetch('/api/scene')
@@ -267,6 +272,7 @@ export function App() {
             setSpeed={setSpeed}
             speedFactor={speedFactor}
             flights={flights}
+            trains={trains}
             hazeDensity={hazeDensity}
             hazeMax={hazeMax}
           />

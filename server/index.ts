@@ -13,6 +13,7 @@ import {
   fetchCPCB,
   fetchTraffic,
   fetchFlights,
+  fetchStationTrains,
 } from './liveData'
 
 const app = express()
@@ -72,6 +73,12 @@ app.get('/api/live/flights', (_req, res) => {
   res.json({ serverTime: t.serverTime, flights: t.flights })
 })
 
+app.get('/api/live/trains', (_req, res) => {
+  res.setHeader('Cache-Control', 'no-cache')
+  const t = getLiveTelemetry()
+  res.json({ serverTime: t.serverTime, station: t.station })
+})
+
 app.post('/api/live/refresh', async (_req, res) => {
   try {
     await Promise.allSettled([
@@ -80,6 +87,7 @@ app.post('/api/live/refresh', async (_req, res) => {
       fetchCPCB(),
       fetchTraffic(),
       fetchFlights(),
+      fetchStationTrains(),
     ])
     res.json({ ok: true, data: getLiveTelemetry() })
   } catch (err: any) {

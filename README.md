@@ -15,6 +15,10 @@ Features **Stage 1 (high-fidelity photorealistic visual twin)**, **Stage 2 (city
   * **CPCB / data.gov.in Ground Station Feed (Key Optional)**: Direct integration with Continuous Ambient Air Quality Monitoring Stations (CAAQMS) across Kolkata (Fort William, Victoria Memorial, etc.). Units verified against official CPCB NAQI dashboard (`µg/m³`). Tagged `[MEASURED]`.
   * **TomTom Traffic Flow API (Key Optional)**: Live vehicle speeds and congestion ratios along Howrah Bridge and Strand Road corridors. Tagged `[MEASURED]`.
   * **OpenSky Network Live Flights**: Real-time ADS-B transponder messages tracking aircraft within the 50 km terminal radar control area of Netaji Subhash Chandra Bose International Airport (CCU / VECC at 22.6547° N, 88.4467° E). Tagged `[MEASURED]`.
+  * **Howrah Station Live Train Operations & 3D PIDS Board**:
+    * **Station Passenger Information Display System (PIDS)**: An authentic electronic LED dot-matrix departure/arrival display board mounted on the Howrah Railway Station entrance concourse (`x = -342, y = 14.5, z = 62`) overlooking the Hooghly river and station plaza.
+    * **Live Train Dispatch & Timetable Sync**: Real-time tracking of premier trains (Howrah-NDLS Rajdhani, Howrah-NJP Vande Bharat, Puri Vande Bharat, Mumbai Mail, Chennai Central Mail, Netaji Express) and Eastern/South Eastern suburban EMU locals across all 23 platforms.
+    * **Operational Status**: Synchronized with Indian Standard Time (IST) clock: calculates active `Boarding`, `On Time`, `Departed`, and `Approaching` states. Tagged `[MODELLED]` (or `[MEASURED]` if `RAILWAY_API_KEY` is provided).
   * **Physical & Visual Reactive Coupling**:
     * **Dynamic Haze Thickness**: Haze extinction coefficient follows Hänel's hygroscopic aerosol swelling model derived from live PM2.5 and relative humidity.
     * **Dynamic Traffic Speed**: Multi-agent simulation speeds dynamically follow real-time TomTom flow ratios.
