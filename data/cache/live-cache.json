@@ -1,30 +1,30 @@
 {
-  "serverTime": "2026-11-16T16:06:53.667Z",
+  "serverTime": "2026-11-16T17:13:27.386Z",
   "fromDiskCache": false,
-  "lastDiskCacheTime": "2026-11-16T16:02:10.146Z",
+  "lastDiskCacheTime": "2026-11-16T17:05:54.696Z",
   "weather": {
     "temperature": {
-      "value": 24,
+      "value": 23.9,
       "unit": "°C",
       "category": "MODELLED",
       "source": "Open-Meteo Forecast (ECMWF/GFS numerical weather model)",
-      "timestamp": "2026-11-16T16:00:00.000Z",
+      "timestamp": "2026-11-16T17:00:00.000Z",
       "status": "ok"
     },
     "relativeHumidity": {
-      "value": 77,
+      "value": 79,
       "unit": "%",
       "category": "MODELLED",
       "source": "Open-Meteo Forecast (ECMWF/GFS numerical weather model)",
-      "timestamp": "2026-11-16T16:00:00.000Z",
+      "timestamp": "2026-11-16T17:00:00.000Z",
       "status": "ok"
     },
     "apparentTemperature": {
-      "value": 27.2,
+      "value": 27.3,
       "unit": "°C",
       "category": "MODELLED",
       "source": "Open-Meteo Forecast (Humidex / Wind Chill model)",
-      "timestamp": "2026-11-16T16:00:00.000Z",
+      "timestamp": "2026-11-16T17:00:00.000Z",
       "status": "ok"
     },
     "precipitation": {
@@ -32,7 +32,7 @@
       "unit": "mm",
       "category": "MODELLED",
       "source": "Open-Meteo Forecast (NWP grid precipitation)",
-      "timestamp": "2026-11-16T16:00:00.000Z",
+      "timestamp": "2026-11-16T17:00:00.000Z",
       "status": "ok"
     },
     "weatherCode": {
@@ -40,57 +40,57 @@
       "unit": "WMO code",
       "category": "MODELLED",
       "source": "Open-Meteo Forecast (WMO 4677 synoptic interpretation)",
-      "timestamp": "2026-11-16T16:00:00.000Z",
+      "timestamp": "2026-11-16T17:00:00.000Z",
       "status": "ok"
     },
     "windSpeed": {
-      "value": 3.2,
+      "value": 2.9,
       "unit": "km/h",
       "category": "MODELLED",
       "source": "Open-Meteo Forecast (10m boundary layer model)",
-      "timestamp": "2026-11-16T16:00:00.000Z",
+      "timestamp": "2026-11-16T17:00:00.000Z",
       "status": "ok"
     },
     "windDirection": {
-      "value": 56,
+      "value": 83,
       "unit": "°",
       "category": "MODELLED",
       "source": "Open-Meteo Forecast (10m boundary layer model)",
-      "timestamp": "2026-11-16T16:00:00.000Z",
+      "timestamp": "2026-11-16T17:00:00.000Z",
       "status": "ok"
     }
   },
   "airQuality": {
     "pm25_modelled": {
-      "value": 235.6,
+      "value": 244.9,
       "unit": "µg/m³",
       "category": "MODELLED",
       "source": "Open-Meteo Air Quality (Copernicus CAMS regional atmospheric model)",
-      "timestamp": "2026-11-16T16:00:00.000Z",
+      "timestamp": "2026-11-16T17:00:00.000Z",
       "status": "ok"
     },
     "pm10_modelled": {
-      "value": 259.8,
+      "value": 268.2,
       "unit": "µg/m³",
       "category": "MODELLED",
       "source": "Open-Meteo Air Quality (Copernicus CAMS regional atmospheric model)",
-      "timestamp": "2026-11-16T16:00:00.000Z",
+      "timestamp": "2026-11-16T17:00:00.000Z",
       "status": "ok"
     },
     "usAqi_modelled": {
-      "value": 266,
+      "value": 265,
       "unit": "US AQI",
       "category": "MODELLED",
       "source": "Open-Meteo Air Quality (EPA AQI standard computation)",
-      "timestamp": "2026-11-16T16:00:00.000Z",
+      "timestamp": "2026-11-16T17:00:00.000Z",
       "status": "ok"
     },
     "europeanAqi_modelled": {
-      "value": 138,
+      "value": 142,
       "unit": "EAQI",
       "category": "MODELLED",
       "source": "Open-Meteo Air Quality (EEA European Air Quality Index)",
-      "timestamp": "2026-11-16T16:00:00.000Z",
+      "timestamp": "2026-11-16T17:00:00.000Z",
       "status": "ok"
     },
     "cpcb_pm25_measured": {
@@ -118,172 +118,188 @@
     "activeFlights": {
       "value": [
         {
-          "icao24": "80187a",
-          "callsign": "IGO82RC",
+          "icao24": "801604",
+          "callsign": "AXB2795",
           "originCountry": "India",
-          "timePosition": 1794845155,
-          "altitudeMeters": 351,
-          "velocityKmph": 371.9,
-          "headingDeg": 8,
-          "verticalRateMps": 7.2,
-          "onGround": false,
-          "lat": 22.6558,
-          "lon": 88.4479,
-          "worldX": 10391,
-          "worldZ": -7870,
-          "distKmFromAirport": 0.2
-        },
-        {
-          "icao24": "801833",
-          "callsign": "AKJ2008",
-          "originCountry": "India",
-          "timePosition": 1794845206,
+          "timePosition": 1794849049,
           "altitudeMeters": null,
-          "velocityKmph": 12,
-          "headingDeg": 65,
+          "velocityKmph": 0.9,
+          "headingDeg": 96,
           "verticalRateMps": null,
           "onGround": true,
-          "lat": 22.6428,
-          "lon": 88.4463,
-          "worldX": 10227,
-          "worldZ": -6423,
-          "distKmFromAirport": 1.3
+          "lat": 22.6451,
+          "lon": 88.4425,
+          "worldX": 9836,
+          "worldZ": -6679,
+          "distKmFromAirport": 1.2
         },
         {
-          "icao24": "8014c1",
-          "callsign": "IGO396",
+          "icao24": "801741",
+          "callsign": "UNIDENTIFIED",
           "originCountry": "India",
-          "timePosition": 1794845201,
-          "altitudeMeters": null,
-          "velocityKmph": 5.5,
-          "headingDeg": 68,
-          "verticalRateMps": null,
-          "onGround": true,
-          "lat": 22.642,
-          "lon": 88.4442,
-          "worldX": 10011,
-          "worldZ": -6334,
-          "distKmFromAirport": 1.4
-        },
-        {
-          "icao24": "801806",
-          "callsign": "IGO6517",
-          "originCountry": "India",
-          "timePosition": 1794844948,
-          "altitudeMeters": null,
-          "velocityKmph": 0.7,
+          "timePosition": 1794849109,
+          "altitudeMeters": 15,
+          "velocityKmph": 4.6,
           "headingDeg": 276,
           "verticalRateMps": null,
           "onGround": true,
-          "lat": 22.6438,
-          "lon": 88.4406,
-          "worldX": 9641,
-          "worldZ": -6534,
-          "distKmFromAirport": 1.4
+          "lat": 22.6451,
+          "lon": 88.4412,
+          "worldX": 9703,
+          "worldZ": -6679,
+          "distKmFromAirport": 1.2
         },
         {
           "icao24": "8008d4",
           "callsign": "FLW ME 1",
           "originCountry": "India",
-          "timePosition": 1794845206,
+          "timePosition": 1794849202,
           "altitudeMeters": null,
-          "velocityKmph": 25.9,
-          "headingDeg": 6,
+          "velocityKmph": 13,
+          "headingDeg": 104,
           "verticalRateMps": null,
           "onGround": true,
-          "lat": 22.6435,
-          "lon": 88.4415,
-          "worldX": 9733,
-          "worldZ": -6501,
-          "distKmFromAirport": 1.4
+          "lat": 22.6413,
+          "lon": 88.4423,
+          "worldX": 9816,
+          "worldZ": -6256,
+          "distKmFromAirport": 1.6
         },
         {
-          "icao24": "8015ad",
-          "callsign": "IGO54CV",
+          "icao24": "80141e",
+          "callsign": "AIC3XY",
           "originCountry": "India",
-          "timePosition": 1794845202,
+          "timePosition": 1794849202,
           "altitudeMeters": null,
-          "velocityKmph": 6.5,
-          "headingDeg": 186,
+          "velocityKmph": 14.8,
+          "headingDeg": 276,
           "verticalRateMps": null,
           "onGround": true,
-          "lat": 22.6421,
-          "lon": 88.4431,
-          "worldX": 9898,
-          "worldZ": -6345,
-          "distKmFromAirport": 1.5
-        },
-        {
-          "icao24": "8018c4",
-          "callsign": "AKJ1125",
-          "originCountry": "India",
-          "timePosition": 1794845202,
-          "altitudeMeters": null,
-          "velocityKmph": 27.8,
-          "headingDeg": 186,
-          "verticalRateMps": null,
-          "onGround": true,
-          "lat": 22.6699,
-          "lon": 88.4459,
-          "worldX": 10186,
-          "worldZ": -9440,
+          "lat": 22.6401,
+          "lon": 88.4421,
+          "worldX": 9795,
+          "worldZ": -6123,
           "distKmFromAirport": 1.7
         },
         {
-          "icao24": "801741",
-          "callsign": "IGO263W",
+          "icao24": "8015fc",
+          "callsign": "IGO6793",
           "originCountry": "India",
-          "timePosition": 1794845105,
+          "timePosition": 1794849199,
           "altitudeMeters": null,
-          "velocityKmph": 422.4,
-          "headingDeg": 181,
-          "verticalRateMps": -7.2,
+          "velocityKmph": 61.1,
+          "headingDeg": 6,
+          "verticalRateMps": null,
           "onGround": true,
-          "lat": 22.6266,
-          "lon": 88.536,
-          "worldX": 19446,
-          "worldZ": -4620,
-          "distKmFromAirport": 9.7
+          "lat": 22.671,
+          "lon": 88.4497,
+          "worldX": 10576,
+          "worldZ": -9562,
+          "distKmFromAirport": 1.8
         },
         {
-          "icao24": "408143",
-          "callsign": "DHK597",
-          "originCountry": "United Kingdom",
-          "timePosition": 1794845206,
-          "altitudeMeters": 11887,
-          "velocityKmph": 968.2,
-          "headingDeg": 100,
+          "icao24": "750458",
+          "callsign": "AXM65",
+          "originCountry": "Malaysia",
+          "timePosition": 1794849068,
+          "altitudeMeters": 617,
+          "velocityKmph": 344.6,
+          "headingDeg": 6,
           "verticalRateMps": 0,
           "onGround": false,
-          "lat": 22.6581,
-          "lon": 88.5676,
-          "worldX": 22694,
-          "worldZ": -8126,
-          "distKmFromAirport": 12.4
+          "lat": 22.4939,
+          "lon": 88.429,
+          "worldX": 8449,
+          "worldZ": 10152,
+          "distKmFromAirport": 18
         },
         {
-          "icao24": "8940ba",
-          "callsign": "DHX723",
-          "originCountry": "Bahrain",
-          "timePosition": 1794845206,
-          "altitudeMeters": 11278,
+          "icao24": "801649",
+          "callsign": "IGO669",
+          "originCountry": "India",
+          "timePosition": 1794849201,
+          "altitudeMeters": 892,
+          "velocityKmph": 346.5,
+          "headingDeg": 6,
+          "verticalRateMps": -2.9,
+          "onGround": false,
+          "lat": 22.4312,
+          "lon": 88.4217,
+          "worldX": 7698,
+          "worldZ": 17132,
+          "distKmFromAirport": 25
+        },
+        {
+          "icao24": "80160d",
+          "callsign": "AXB1369",
+          "originCountry": "India",
+          "timePosition": 1794849201,
+          "altitudeMeters": 2606,
+          "velocityKmph": 452.7,
+          "headingDeg": 162,
+          "verticalRateMps": -5.8,
+          "onGround": false,
+          "lat": 22.5097,
+          "lon": 88.7135,
+          "worldX": 37690,
+          "worldZ": 8393,
+          "distKmFromAirport": 31.8
+        },
+        {
+          "icao24": "06a30a",
+          "callsign": "QTR8938",
+          "originCountry": "Qatar",
+          "timePosition": 1794849202,
+          "altitudeMeters": 12497,
           "velocityKmph": 963.6,
-          "headingDeg": 94,
+          "headingDeg": 95,
           "verticalRateMps": 0,
           "onGround": false,
-          "lat": 22.6931,
-          "lon": 88.1973,
-          "worldX": -15366,
-          "worldZ": -12023,
-          "distKmFromAirport": 26
+          "lat": 22.6711,
+          "lon": 88.0988,
+          "worldX": -25490,
+          "worldZ": -9573,
+          "distKmFromAirport": 35.8
+        },
+        {
+          "icao24": "86e4b8",
+          "callsign": "JAL753",
+          "originCountry": "Japan",
+          "timePosition": 1794849202,
+          "altitudeMeters": 12184,
+          "velocityKmph": 845,
+          "headingDeg": 280,
+          "verticalRateMps": -0.3,
+          "onGround": false,
+          "lat": 22.6106,
+          "lon": 88.8439,
+          "worldX": 51093,
+          "worldZ": -2839,
+          "distKmFromAirport": 41.1
+        },
+        {
+          "icao24": "8014ae",
+          "callsign": "AXB1197",
+          "originCountry": "India",
+          "timePosition": 1794849202,
+          "altitudeMeters": 1707,
+          "velocityKmph": 370.8,
+          "headingDeg": 60,
+          "verticalRateMps": -4.5,
+          "onGround": false,
+          "lat": 22.2532,
+          "lon": 88.3492,
+          "worldX": 247,
+          "worldZ": 36947,
+          "distKmFromAirport": 45.8
         }
       ],
       "unit": "aircraft",
       "category": "MEASURED",
       "source": "OpenSky Network (Ground ADS-B sensor receivers)",
-      "timestamp": "2026-11-16T16:06:47.000Z",
+      "timestamp": "2026-11-16T17:13:23.000Z",
       "status": "ok",
-      "notes": "10 aircraft tracked within 50km terminal radar sector of Kolkata Airport (CCU/VECC)"
+      "notes": "11 aircraft tracked within 50km terminal radar sector of Kolkata Airport (CCU/VECC)"
     }
   },
   "station": {
@@ -293,118 +309,6 @@
         "stationName": "Howrah Junction (Howrah Terminal)",
         "totalPlatforms": 23,
         "activeServices": [
-          {
-            "trainNumber": "37815",
-            "trainName": "Howrah - Barddhaman Chord Local",
-            "trainType": "EMU Local",
-            "destination": "Barddhaman (BWN)",
-            "origin": "Howrah (HWH)",
-            "platform": "PF 4",
-            "type": "DEPARTURE",
-            "scheduledTime": "21:35",
-            "expectedTime": "21:35",
-            "delayMinutes": 0,
-            "status": "Boarding",
-            "category": "MODELLED",
-            "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T16:06:53.098Z"
-          },
-          {
-            "trainNumber": "38703",
-            "trainName": "Howrah - Kharagpur EMU Local",
-            "trainType": "EMU Local",
-            "destination": "Kharagpur (KGP)",
-            "origin": "Howrah (HWH)",
-            "platform": "PF 13",
-            "type": "DEPARTURE",
-            "scheduledTime": "21:40",
-            "expectedTime": "21:40",
-            "delayMinutes": 0,
-            "status": "Boarding",
-            "category": "MODELLED",
-            "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T16:06:53.098Z"
-          },
-          {
-            "trainNumber": "38401",
-            "trainName": "Howrah - Panskura EMU Local",
-            "trainType": "EMU Local",
-            "destination": "Panskura (PKU)",
-            "origin": "Howrah (HWH)",
-            "platform": "PF 11",
-            "type": "DEPARTURE",
-            "scheduledTime": "21:20",
-            "expectedTime": "21:20",
-            "delayMinutes": 0,
-            "status": "Boarding",
-            "category": "MODELLED",
-            "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T16:06:53.098Z"
-          },
-          {
-            "trainNumber": "12311",
-            "trainName": "Netaji Express",
-            "trainType": "Superfast",
-            "destination": "Kalka (KLK)",
-            "origin": "Howrah (HWH)",
-            "platform": "PF 14",
-            "type": "DEPARTURE",
-            "scheduledTime": "21:55",
-            "expectedTime": "21:55",
-            "delayMinutes": 0,
-            "status": "On Time",
-            "category": "MODELLED",
-            "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T16:06:53.098Z"
-          },
-          {
-            "trainNumber": "37813",
-            "trainName": "Howrah - Barddhaman Main Line Local",
-            "trainType": "EMU Local",
-            "destination": "Barddhaman (BWN)",
-            "origin": "Howrah (HWH)",
-            "platform": "PF 3",
-            "type": "DEPARTURE",
-            "scheduledTime": "21:10",
-            "expectedTime": "21:10",
-            "delayMinutes": 0,
-            "status": "Departed",
-            "category": "MODELLED",
-            "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T16:06:53.098Z"
-          },
-          {
-            "trainNumber": "37311",
-            "trainName": "Howrah - Tarakeswar EMU Local",
-            "trainType": "EMU Local",
-            "destination": "Tarakeswar (TAK)",
-            "origin": "Howrah (HWH)",
-            "platform": "PF 2",
-            "type": "DEPARTURE",
-            "scheduledTime": "22:05",
-            "expectedTime": "22:05",
-            "delayMinutes": 0,
-            "status": "On Time",
-            "category": "MODELLED",
-            "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T16:06:53.098Z"
-          },
-          {
-            "trainNumber": "38801",
-            "trainName": "Howrah - Midnapore Fast Local",
-            "trainType": "EMU Local",
-            "destination": "Midnapore (MDN)",
-            "origin": "Howrah (HWH)",
-            "platform": "PF 15",
-            "type": "DEPARTURE",
-            "scheduledTime": "22:15",
-            "expectedTime": "22:15",
-            "delayMinutes": 0,
-            "status": "On Time",
-            "category": "MODELLED",
-            "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T16:06:53.098Z"
-          },
           {
             "trainNumber": "12863",
             "trainName": "Howrah - SMVT Bengaluru SF Express",
@@ -416,10 +320,10 @@
             "scheduledTime": "22:55",
             "expectedTime": "22:55",
             "delayMinutes": 0,
-            "status": "On Time",
+            "status": "Boarding",
             "category": "MODELLED",
             "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T16:06:53.098Z"
+            "timestamp": "2026-11-16T17:12:56.844Z"
           },
           {
             "trainNumber": "12840",
@@ -435,7 +339,23 @@
             "status": "On Time",
             "category": "MODELLED",
             "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T16:06:53.098Z"
+            "timestamp": "2026-11-16T17:12:56.844Z"
+          },
+          {
+            "trainNumber": "38801",
+            "trainName": "Howrah - Midnapore Fast Local",
+            "trainType": "EMU Local",
+            "destination": "Midnapore (MDN)",
+            "origin": "Howrah (HWH)",
+            "platform": "PF 15",
+            "type": "DEPARTURE",
+            "scheduledTime": "22:15",
+            "expectedTime": "22:15",
+            "delayMinutes": 0,
+            "status": "Departed",
+            "category": "MODELLED",
+            "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
+            "timestamp": "2026-11-16T17:12:56.844Z"
           },
           {
             "trainNumber": "12321",
@@ -451,7 +371,7 @@
             "status": "On Time",
             "category": "MODELLED",
             "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T16:06:53.098Z"
+            "timestamp": "2026-11-16T17:12:56.844Z"
           },
           {
             "trainNumber": "12834",
@@ -467,7 +387,7 @@
             "status": "On Time",
             "category": "MODELLED",
             "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T16:06:53.098Z"
+            "timestamp": "2026-11-16T17:12:56.844Z"
           },
           {
             "trainNumber": "12839",
@@ -483,7 +403,103 @@
             "status": "On Time",
             "category": "MODELLED",
             "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T16:06:53.098Z"
+            "timestamp": "2026-11-16T17:12:56.844Z"
+          },
+          {
+            "trainNumber": "37311",
+            "trainName": "Howrah - Tarakeswar EMU Local",
+            "trainType": "EMU Local",
+            "destination": "Tarakeswar (TAK)",
+            "origin": "Howrah (HWH)",
+            "platform": "PF 2",
+            "type": "DEPARTURE",
+            "scheduledTime": "22:05",
+            "expectedTime": "22:05",
+            "delayMinutes": 0,
+            "status": "Departed",
+            "category": "MODELLED",
+            "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
+            "timestamp": "2026-11-16T17:12:56.844Z"
+          },
+          {
+            "trainNumber": "12311",
+            "trainName": "Netaji Express",
+            "trainType": "Superfast",
+            "destination": "Kalka (KLK)",
+            "origin": "Howrah (HWH)",
+            "platform": "PF 14",
+            "type": "DEPARTURE",
+            "scheduledTime": "21:55",
+            "expectedTime": "21:55",
+            "delayMinutes": 0,
+            "status": "Departed",
+            "category": "MODELLED",
+            "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
+            "timestamp": "2026-11-16T17:12:56.844Z"
+          },
+          {
+            "trainNumber": "38703",
+            "trainName": "Howrah - Kharagpur EMU Local",
+            "trainType": "EMU Local",
+            "destination": "Kharagpur (KGP)",
+            "origin": "Howrah (HWH)",
+            "platform": "PF 13",
+            "type": "DEPARTURE",
+            "scheduledTime": "21:40",
+            "expectedTime": "21:40",
+            "delayMinutes": 0,
+            "status": "Departed",
+            "category": "MODELLED",
+            "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
+            "timestamp": "2026-11-16T17:12:56.844Z"
+          },
+          {
+            "trainNumber": "37815",
+            "trainName": "Howrah - Barddhaman Chord Local",
+            "trainType": "EMU Local",
+            "destination": "Barddhaman (BWN)",
+            "origin": "Howrah (HWH)",
+            "platform": "PF 4",
+            "type": "DEPARTURE",
+            "scheduledTime": "21:35",
+            "expectedTime": "21:35",
+            "delayMinutes": 0,
+            "status": "Departed",
+            "category": "MODELLED",
+            "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
+            "timestamp": "2026-11-16T17:12:56.844Z"
+          },
+          {
+            "trainNumber": "38401",
+            "trainName": "Howrah - Panskura EMU Local",
+            "trainType": "EMU Local",
+            "destination": "Panskura (PKU)",
+            "origin": "Howrah (HWH)",
+            "platform": "PF 11",
+            "type": "DEPARTURE",
+            "scheduledTime": "21:20",
+            "expectedTime": "21:20",
+            "delayMinutes": 0,
+            "status": "Departed",
+            "category": "MODELLED",
+            "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
+            "timestamp": "2026-11-16T17:12:56.844Z"
+          },
+          {
+            "trainNumber": "37813",
+            "trainName": "Howrah - Barddhaman Main Line Local",
+            "trainType": "EMU Local",
+            "destination": "Barddhaman (BWN)",
+            "origin": "Howrah (HWH)",
+            "platform": "PF 3",
+            "type": "DEPARTURE",
+            "scheduledTime": "21:10",
+            "expectedTime": "21:10",
+            "delayMinutes": 0,
+            "status": "Departed",
+            "category": "MODELLED",
+            "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
+            "timestamp": "2026-11-16T17:12:56.844Z"
           },
           {
             "trainNumber": "37211",
@@ -499,7 +515,7 @@
             "status": "Departed",
             "category": "MODELLED",
             "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T16:06:53.098Z"
+            "timestamp": "2026-11-16T17:12:56.844Z"
           },
           {
             "trainNumber": "12810",
@@ -515,7 +531,7 @@
             "status": "Departed",
             "category": "MODELLED",
             "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T16:06:53.098Z"
+            "timestamp": "2026-11-16T17:12:56.844Z"
           },
           {
             "trainNumber": "13005",
@@ -531,7 +547,7 @@
             "status": "Departed",
             "category": "MODELLED",
             "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T16:06:53.098Z"
+            "timestamp": "2026-11-16T17:12:56.844Z"
           },
           {
             "trainNumber": "12301",
@@ -547,7 +563,7 @@
             "status": "Departed",
             "category": "MODELLED",
             "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T16:06:53.098Z"
+            "timestamp": "2026-11-16T17:12:56.844Z"
           },
           {
             "trainNumber": "22303",
@@ -563,39 +579,7 @@
             "status": "Departed",
             "category": "MODELLED",
             "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T16:06:53.098Z"
-          },
-          {
-            "trainNumber": "12305",
-            "trainName": "Howrah - New Delhi Rajdhani Express (via Patna)",
-            "trainType": "Rajdhani",
-            "destination": "New Delhi (NDLS)",
-            "origin": "Howrah (HWH)",
-            "platform": "PF 9",
-            "type": "DEPARTURE",
-            "scheduledTime": "14:05",
-            "expectedTime": "14:05",
-            "delayMinutes": 0,
-            "status": "Departed",
-            "category": "MODELLED",
-            "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T16:06:53.098Z"
-          },
-          {
-            "trainNumber": "22302",
-            "trainName": "New Jalpaiguri - Howrah Vande Bharat Express",
-            "trainType": "Vande Bharat",
-            "destination": "Howrah (HWH)",
-            "origin": "New Jalpaiguri (NJP)",
-            "platform": "PF 8",
-            "type": "ARRIVAL",
-            "scheduledTime": "13:35",
-            "expectedTime": "13:35",
-            "delayMinutes": 0,
-            "status": "Arrived",
-            "category": "MODELLED",
-            "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T16:06:53.098Z"
+            "timestamp": "2026-11-16T17:12:56.844Z"
           },
           {
             "trainNumber": "12809",
@@ -611,7 +595,7 @@
             "status": "On Time",
             "category": "MODELLED",
             "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T16:06:53.098Z"
+            "timestamp": "2026-11-16T17:12:56.844Z"
           },
           {
             "trainNumber": "22301",
@@ -627,7 +611,7 @@
             "status": "On Time",
             "category": "MODELLED",
             "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T16:06:53.098Z"
+            "timestamp": "2026-11-16T17:12:56.844Z"
           },
           {
             "trainNumber": "12019",
@@ -643,7 +627,7 @@
             "status": "On Time",
             "category": "MODELLED",
             "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T16:06:53.098Z"
+            "timestamp": "2026-11-16T17:12:56.844Z"
           },
           {
             "trainNumber": "22895",
@@ -659,7 +643,7 @@
             "status": "On Time",
             "category": "MODELLED",
             "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T16:06:53.098Z"
+            "timestamp": "2026-11-16T17:12:56.844Z"
           },
           {
             "trainNumber": "12857",
@@ -675,23 +659,7 @@
             "status": "On Time",
             "category": "MODELLED",
             "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T16:06:53.098Z"
-          },
-          {
-            "trainNumber": "22896",
-            "trainName": "Puri - Howrah Vande Bharat Express",
-            "trainType": "Vande Bharat",
-            "destination": "Howrah (HWH)",
-            "origin": "Puri (PURI)",
-            "platform": "PF 21",
-            "type": "ARRIVAL",
-            "scheduledTime": "12:20",
-            "expectedTime": "12:20",
-            "delayMinutes": 0,
-            "status": "Arrived",
-            "category": "MODELLED",
-            "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T16:06:53.098Z"
+            "timestamp": "2026-11-16T17:12:56.844Z"
           },
           {
             "trainNumber": "12871",
@@ -707,7 +675,55 @@
             "status": "On Time",
             "category": "MODELLED",
             "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T16:06:53.098Z"
+            "timestamp": "2026-11-16T17:12:56.844Z"
+          },
+          {
+            "trainNumber": "12305",
+            "trainName": "Howrah - New Delhi Rajdhani Express (via Patna)",
+            "trainType": "Rajdhani",
+            "destination": "New Delhi (NDLS)",
+            "origin": "Howrah (HWH)",
+            "platform": "PF 9",
+            "type": "DEPARTURE",
+            "scheduledTime": "14:05",
+            "expectedTime": "14:05",
+            "delayMinutes": 0,
+            "status": "Departed",
+            "category": "MODELLED",
+            "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
+            "timestamp": "2026-11-16T17:12:56.844Z"
+          },
+          {
+            "trainNumber": "22302",
+            "trainName": "New Jalpaiguri - Howrah Vande Bharat Express",
+            "trainType": "Vande Bharat",
+            "destination": "Howrah (HWH)",
+            "origin": "New Jalpaiguri (NJP)",
+            "platform": "PF 8",
+            "type": "ARRIVAL",
+            "scheduledTime": "13:35",
+            "expectedTime": "13:35",
+            "delayMinutes": 0,
+            "status": "Arrived",
+            "category": "MODELLED",
+            "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
+            "timestamp": "2026-11-16T17:12:56.844Z"
+          },
+          {
+            "trainNumber": "22896",
+            "trainName": "Puri - Howrah Vande Bharat Express",
+            "trainType": "Vande Bharat",
+            "destination": "Howrah (HWH)",
+            "origin": "Puri (PURI)",
+            "platform": "PF 21",
+            "type": "ARRIVAL",
+            "scheduledTime": "12:20",
+            "expectedTime": "12:20",
+            "delayMinutes": 0,
+            "status": "Arrived",
+            "category": "MODELLED",
+            "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
+            "timestamp": "2026-11-16T17:12:56.844Z"
           },
           {
             "trainNumber": "12302",
@@ -720,41 +736,41 @@
             "scheduledTime": "09:55",
             "expectedTime": "09:55",
             "delayMinutes": 0,
-            "status": "Arrived",
+            "status": "On Time",
             "category": "MODELLED",
             "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T16:06:53.098Z"
+            "timestamp": "2026-11-16T17:12:56.844Z"
           }
         ],
         "source": "Indian Railways Official Timetable (Howrah Division)",
         "category": "MODELLED",
-        "timestamp": "2026-11-16T16:06:53.098Z",
+        "timestamp": "2026-11-16T17:12:56.844Z",
         "status": "ok",
         "notes": "Synchronized to live IST clock. Displays authentic scheduled departures & arrivals across Platforms 1–23 (Eastern Railway & South Eastern Railway). Supply RAILWAY_API_KEY for live measured NTES feed."
       },
       "unit": "services",
       "category": "MODELLED",
       "source": "Indian Railways Timetable & Operational Platform Model (Howrah Terminal)",
-      "timestamp": "2026-11-16T16:06:53.098Z",
+      "timestamp": "2026-11-16T17:12:56.844Z",
       "status": "ok"
     }
   },
   "derived": {
     "hazeDensity": {
-      "value": 0.000492,
+      "value": 0.000515,
       "unit": "extinction coef (1/m)",
       "category": "ESTIMATED",
       "source": "Hänel hygroscopic aerosol swelling model [PM2.5 + RH]",
-      "timestamp": "2026-11-16T16:06:53.098Z",
+      "timestamp": "2026-11-16T17:12:56.844Z",
       "status": "ok",
-      "notes": "Extinction derived from live PM2.5 (235.6 µg/m³) and RH (77%)"
+      "notes": "Extinction derived from live PM2.5 (244.9 µg/m³) and RH (79%)"
     },
     "hazeMaxExtinction": {
       "value": 0.99,
       "unit": "opacity ratio",
       "category": "ESTIMATED",
       "source": "Atmospheric optical depth ceiling",
-      "timestamp": "2026-11-16T16:06:53.098Z",
+      "timestamp": "2026-11-16T17:12:56.844Z",
       "status": "ok"
     },
     "trafficSpeedFactor": {
@@ -762,7 +778,7 @@
       "unit": "multiplier",
       "category": "ESTIMATED",
       "source": "Default road network speed limits",
-      "timestamp": "2026-11-16T16:06:53.098Z",
+      "timestamp": "2026-11-16T17:12:56.844Z",
       "status": "ok",
       "notes": "No TomTom key; no invented speed ratio. Baseline road network limits apply."
     }

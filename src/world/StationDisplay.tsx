@@ -25,9 +25,9 @@ export function StationDisplay({
     return trains.slice(start, start + 4)
   }, [trains, page])
 
-  // Howrah Station terminal concourse coords:
-  // x = -342 (west bank), y = 14 (above entrance portico), z = 62 (facing east toward Hooghly river & Howrah Bridge)
-  const pos: [number, number, number] = [-342, 14.5, 62]
+  // Howrah Station terminal eastern entrance portico coords:
+  // x = -316.5 (front façade of station building), y = 14 (above main entrance portico), z = 85 (facing east toward Hooghly river & bridge)
+  const pos: [number, number, number] = [-316.5, 14, 85]
 
   return (
     <group position={pos} rotation={[0, Math.PI / 2, 0]}>

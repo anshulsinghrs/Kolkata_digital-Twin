@@ -16,9 +16,13 @@ Features **Stage 1 (high-fidelity photorealistic visual twin)**, **Stage 2 (city
   * **TomTom Traffic Flow API (Key Optional)**: Live vehicle speeds and congestion ratios along Howrah Bridge and Strand Road corridors. Tagged `[MEASURED]`.
   * **OpenSky Network Live Flights**: Real-time ADS-B transponder messages tracking aircraft within the 50 km terminal radar control area of Netaji Subhash Chandra Bose International Airport (CCU / VECC at 22.6547° N, 88.4467° E). Tagged `[MEASURED]`.
   * **Howrah Station Live Train Operations & 3D PIDS Board**:
-    * **Station Passenger Information Display System (PIDS)**: An authentic electronic LED dot-matrix departure/arrival display board mounted on the Howrah Railway Station entrance concourse (`x = -342, y = 14.5, z = 62`) overlooking the Hooghly river and station plaza.
+    * **Station Passenger Information Display System (PIDS)**: An authentic electronic LED dot-matrix departure/arrival display board mounted on the Howrah Railway Station front entrance portico (`x = -316.5, y = 14, z = 85`) overlooking the station taxi stand, plaza, and the Hooghly river.
     * **Live Train Dispatch & Timetable Sync**: Real-time tracking of premier trains (Howrah-NDLS Rajdhani, Howrah-NJP Vande Bharat, Puri Vande Bharat, Mumbai Mail, Chennai Central Mail, Netaji Express) and Eastern/South Eastern suburban EMU locals across all 23 platforms.
     * **Operational Status**: Synchronized with Indian Standard Time (IST) clock: calculates active `Boarding`, `On Time`, `Departed`, and `Approaching` states. Tagged `[MODELLED]` (or `[MEASURED]` if `RAILWAY_API_KEY` is provided).
+  * **Real OSM Railway Track Splines & Articulated Trains**:
+    * **True Track-Following Physics**: NPC trains strictly follow the real Broad Gauge OpenStreetMap railway lines (Track 36 Outbound Main Line, Track 35 Inbound Main Line, Track 17 South Complex Line).
+    * **Individual Carriage Articulation**: Every locomotive and passenger coach individually samples the 1.25 km curved track spline, snaking naturally through yard junctions at ground level (`y = 2.05 m`) directly atop the rendered steel rails and ballast.
+    * **Authentic Train Formations**: WAP-7 red-and-cream electric locomotive with 5 royal blue ICF coaches, Eastern Railway White & Maroon suburban EMU local, and Vande Bharat semi-high-speed trainset with active track-illuminating headlights.
   * **Physical & Visual Reactive Coupling**:
     * **Dynamic Haze Thickness**: Haze extinction coefficient follows Hänel's hygroscopic aerosol swelling model derived from live PM2.5 and relative humidity.
     * **Dynamic Traffic Speed**: Multi-agent simulation speeds dynamically follow real-time TomTom flow ratios.

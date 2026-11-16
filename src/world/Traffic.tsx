@@ -4,6 +4,7 @@ import { useFrame } from '@react-three/fiber'
 import { useGLTF } from '@react-three/drei'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import type { SceneData } from './types'
+import { toPts } from './types'
 import { BRIDGE, deckY } from './Bridge'
 import { WATER_Y } from './constants'
 
@@ -78,12 +79,51 @@ interface FerryAgent {
   rollPhase: number
 }
 
-interface TrainAgent {
-  trackZ: number
-  x: number
-  dir: number
+interface RailSpline {
+  idx: number
+  pts: [number, number][]
+  cumDist: number[]
+  totalLen: number
+}
+
+interface TrainFormation {
+  name: string
+  type: 'express' | 'emu' | 'vandebharat'
+  splineIdx: number
   speed: number
-  type: 'express' | 'emu'
+  s: number
+  dir: number
+  carSpacing: number
+  numCoaches: number
+}
+
+// Sample a railway spline at distance s along its polyline
+function sampleRail(pts: [number, number][], cumDist: number[], totalLen: number, s: number) {
+  if (s <= 0) {
+    const dx = pts[1][0] - pts[0][0]
+    const dz = pts[1][1] - pts[0][1]
+    const len = Math.hypot(dx, dz) || 1
+    return { x: pts[0][0], z: pts[0][1], fx: dx / len, fz: dz / len }
+  }
+  if (s >= totalLen) {
+    const n = pts.length
+    const dx = pts[n - 1][0] - pts[n - 2][0]
+    const dz = pts[n - 1][1] - pts[n - 2][1]
+    const len = Math.hypot(dx, dz) || 1
+    return { x: pts[n - 1][0], z: pts[n - 1][1], fx: dx / len, fz: dz / len }
+  }
+  let i = 0
+  while (i < cumDist.length - 1 && cumDist[i + 1] < s) i++
+  const segLen = cumDist[i + 1] - cumDist[i]
+  const t = segLen > 0 ? (s - cumDist[i]) / segLen : 0
+  const p0 = pts[i]
+  const p1 = pts[i + 1]
+  const x = p0[0] + (p1[0] - p0[0]) * t
+  const z = p0[1] + (p1[1] - p0[1]) * t
+  const dx = p1[0] - p0[0]
+  const dz = p1[1] - p0[1]
+  const len = Math.hypot(dx, dz) || 1
+  return { x, z, fx: dx / len, fz: dz / len }
 }
 
 // Sample a 2D polyline road path at distance s along its length
@@ -550,10 +590,56 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
     { x: cx + 200, z: cz - 80, originX: cx + 200, originZ: cz - 80, targetX: cx - 210, targetZ: cz - 120, speed: 4.4, heading: 0, rollPhase: 4.6 },
   ])
 
-  // Trains at Howrah Station yard
-  const trains = useRef<TrainAgent[]>([
-    { trackZ: 58, x: -330, dir: -1, speed: 12.0, type: 'express' },
-    { trackZ: 86, x: -700, dir: 1, speed: 9.5, type: 'emu' },
+  // Build continuous rail splines from OSM data.rails
+  const railTracks = useMemo<RailSpline[]>(() => {
+    if (!data.rails || data.rails.length === 0) return []
+    // Track 36 (Outbound Express), Track 35 (Inbound EMU Local), Track 17 (Vande Bharat South Complex)
+    const trackIndices = [36, 35, 17]
+    return trackIndices.map((tIdx) => {
+      const raw = data.rails[tIdx] || data.rails[0]
+      const pts = toPts(raw) as [number, number][]
+      const cumDist = [0]
+      let total = 0
+      for (let i = 0; i < pts.length - 1; i++) {
+        total += Math.hypot(pts[i + 1][0] - pts[i][0], pts[i + 1][1] - pts[i][1])
+        cumDist.push(total)
+      }
+      return { idx: tIdx, pts, cumDist, totalLen: total }
+    })
+  }, [data.rails])
+
+  // Real track-following Train Formations operating along Howrah OSM Broad Gauge lines
+  const trainFormations = useRef<TrainFormation[]>([
+    {
+      name: '12301 Howrah - New Delhi Rajdhani Express (WAP-7)',
+      type: 'express',
+      splineIdx: 0, // Track 36 (Outbound from platform 9)
+      speed: 13.5,
+      s: 260,
+      dir: 1,
+      carSpacing: 22.0,
+      numCoaches: 5,
+    },
+    {
+      name: '37815 Howrah - Barddhaman EMU Local',
+      type: 'emu',
+      splineIdx: 1, // Track 35 (Inbound toward platform 4)
+      speed: 10.5,
+      s: 980,
+      dir: 1,
+      carSpacing: 20.5,
+      numCoaches: 4,
+    },
+    {
+      name: '22301 Howrah - New Jalpaiguri Vande Bharat Express',
+      type: 'vandebharat',
+      splineIdx: 2, // Track 17 (South Complex Line)
+      speed: 15.0,
+      s: 480,
+      dir: 1,
+      carSpacing: 22.0,
+      numCoaches: 4,
+    },
   ])
 
   // Instanced Meshes refs
@@ -895,16 +981,38 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
       })
     }
 
-    // 5. Animate Howrah Station Trains
-    if (trainGroup.current) {
-      trainGroup.current.children.forEach((trainObj, ti) => {
-        const t = trains.current[ti]
-        if (!t) return
-        t.x += t.dir * t.speed * dt
-        if (t.dir < 0 && t.x < -740) t.x = -320
-        if (t.dir > 0 && t.x > -310) t.x = -730
-        trainObj.position.set(t.x, 5.2, t.trackZ)
-        trainObj.rotation.y = t.dir > 0 ? 0 : Math.PI
+    // 5. Animate Howrah Station Trains along real OSM Railway Tracks
+    if (trainGroup.current && railTracks.length >= 3) {
+      trainFormations.current.forEach((tf, trainIdx) => {
+        const trObj = trainGroup.current.children[trainIdx] as THREE.Group
+        if (!trObj) return
+        const spline = railTracks[tf.splineIdx]
+        if (!spline || spline.totalLen <= 0) return
+
+        // Advance along spline
+        tf.s += tf.dir * tf.speed * speedFactor * dt
+        const trainTotalLen = (tf.numCoaches + 1) * tf.carSpacing
+        if (tf.dir > 0 && tf.s > spline.totalLen + trainTotalLen) {
+          tf.s = -50
+        } else if (tf.dir < 0 && tf.s < -trainTotalLen) {
+          tf.s = spline.totalLen + 50
+        }
+
+        // Position each carriage (loco + coaches) individually along the curved track spline
+        trObj.children.forEach((carMesh, carIdx) => {
+          const carS = tf.s - carIdx * tf.carSpacing
+          // If car is outside visible track bounds, tuck underground
+          if (carS < 0 || carS > spline.totalLen) {
+            carMesh.position.set(0, -999, 0)
+            return
+          }
+
+          const samp = sampleRail(spline.pts, spline.cumDist, spline.totalLen, carS)
+          // Steel rail ribbons sit at y = 0.22; train carriage center sits at y = 2.05
+          carMesh.position.set(samp.x, 2.05, samp.z)
+          // Box length along Z rotates to align with track forward tangent (fx, fz)
+          carMesh.rotation.y = Math.atan2(samp.fx, samp.fz)
+        })
       })
     }
   })
@@ -959,41 +1067,189 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
         ))}
       </group>
 
-      {/* Howrah Station Rail Movement (WAP-7 Express & Suburban Local Trains) */}
+      {/* Howrah Station Rail Movement (Authentic Track-Following Trains along OSM Splines) */}
       <group ref={trainGroup}>
-        {/* Train 1: WAP-7 Outbound Express Train */}
-        <group>
-          {/* WAP-7 Electric Locomotive (Red & Cream) */}
-          <mesh position={[0, 1.9, 0]} castShadow>
-            <boxGeometry args={[16.5, 3.6, 3.2]} />
-            <meshStandardMaterial color="#b32015" roughness={0.4} metalness={0.3} />
-          </mesh>
-          <mesh position={[0, 3.9, 0]}>
-            <boxGeometry args={[14, 0.4, 2.8]} />
-            <meshStandardMaterial color="#c0b8b0" roughness={0.5} />
-          </mesh>
-          {/* 5 Classic Indian Railways Blue ICF Passenger Coaches */}
-          {[1, 2, 3, 4, 5].map((coachIdx) => (
-            <mesh key={coachIdx} position={[-coachIdx * 22, 1.85, 0]} castShadow>
-              <boxGeometry args={[20.5, 3.5, 3.1]} />
-              <meshStandardMaterial color="#1a4b8c" roughness={0.4} metalness={0.2} />
+        {/* Train 1: WAP-7 Express Train (Outbound on Rail 36 toward New Delhi / Mumbai) */}
+        <group name="train-wap7-express">
+          {/* Car 0: WAP-7 Electric Locomotive (Red & Cream liveried) */}
+          <group>
+            {/* Locomotive Body (length along Z axis: 18m, width 3.2m, height 3.6m) */}
+            <mesh castShadow receiveShadow>
+              <boxGeometry args={[3.2, 3.4, 18.0]} />
+              <meshStandardMaterial color="#b32015" roughness={0.35} metalness={0.25} />
             </mesh>
+            {/* Cream Middle Band */}
+            <mesh position={[0, 0, 0]}>
+              <boxGeometry args={[3.24, 0.65, 18.1]} />
+              <meshStandardMaterial color="#f5eedb" roughness={0.4} />
+            </mesh>
+            {/* Cab Roof Equipment & Pantographs */}
+            <mesh position={[0, 1.9, 0]}>
+              <boxGeometry args={[2.9, 0.45, 15.5]} />
+              <meshStandardMaterial color="#b8c0c8" roughness={0.5} />
+            </mesh>
+            {/* Pantograph Assemblies (Front & Rear) */}
+            <mesh position={[0, 2.3, 5.0]}>
+              <boxGeometry args={[1.8, 0.5, 2.2]} />
+              <meshStandardMaterial color="#d42015" roughness={0.5} metalness={0.6} />
+            </mesh>
+            <mesh position={[0, 2.3, -5.0]}>
+              <boxGeometry args={[1.8, 0.5, 2.2]} />
+              <meshStandardMaterial color="#d42015" roughness={0.5} metalness={0.6} />
+            </mesh>
+            {/* Front Headlight Light Source illuminating track rails */}
+            <pointLight position={[0, 0.5, 9.2]} intensity={16} distance={35} color="#fff6dd" />
+            {/* Front Bogie */}
+            <mesh position={[0, -1.3, 5.2]}>
+              <boxGeometry args={[2.8, 0.55, 3.8]} />
+              <meshStandardMaterial color="#1f2428" roughness={0.8} />
+            </mesh>
+            {/* Rear Bogie */}
+            <mesh position={[0, -1.3, -5.2]}>
+              <boxGeometry args={[2.8, 0.55, 3.8]} />
+              <meshStandardMaterial color="#1f2428" roughness={0.8} />
+            </mesh>
+          </group>
+
+          {/* Cars 1..5: 5 Classic Indian Railways Royal Blue ICF Passenger Coaches */}
+          {[1, 2, 3, 4, 5].map((cIdx) => (
+            <group key={cIdx}>
+              {/* Coach Body (length along Z: 21m) */}
+              <mesh castShadow receiveShadow>
+                <boxGeometry args={[3.2, 3.3, 21.0]} />
+                <meshStandardMaterial color="#1a4b8c" roughness={0.4} metalness={0.2} />
+              </mesh>
+              {/* Windows Band */}
+              <mesh position={[0, 0.35, 0]}>
+                <boxGeometry args={[3.24, 0.75, 20.6]} />
+                <meshStandardMaterial color="#14181c" roughness={0.2} />
+              </mesh>
+              {/* Coach Roof (off-white curved top) */}
+              <mesh position={[0, 1.75, 0]}>
+                <boxGeometry args={[3.1, 0.3, 20.8]} />
+                <meshStandardMaterial color="#b8c2cc" roughness={0.5} />
+              </mesh>
+              {/* Wheel Bogies (Front & Rear) */}
+              <mesh position={[0, -1.3, 6.8]}>
+                <boxGeometry args={[2.7, 0.5, 3.5]} />
+                <meshStandardMaterial color="#1f2428" roughness={0.8} />
+              </mesh>
+              <mesh position={[0, -1.3, -6.8]}>
+                <boxGeometry args={[2.7, 0.5, 3.5]} />
+                <meshStandardMaterial color="#1f2428" roughness={0.8} />
+              </mesh>
+            </group>
           ))}
         </group>
 
-        {/* Train 2: Inbound Suburban Local EMU Train (White & Maroon) */}
-        <group>
-          {/* EMU Driving Cab */}
-          <mesh position={[0, 1.85, 0]} castShadow>
-            <boxGeometry args={[19, 3.5, 3.2]} />
-            <meshStandardMaterial color="#801828" roughness={0.4} />
-          </mesh>
-          {/* EMU Middle Coaches */}
-          {[1, 2, 3, 4].map((coachIdx) => (
-            <mesh key={coachIdx} position={[-coachIdx * 20.5, 1.85, 0]} castShadow>
-              <boxGeometry args={[19.5, 3.5, 3.2]} />
-              <meshStandardMaterial color="#dcd6cd" roughness={0.4} />
+        {/* Train 2: Eastern Railway Suburban EMU Local (Inbound on Rail 35) */}
+        <group name="train-suburban-emu">
+          {/* Car 0: Driving Motor Cab (Maroon & White) */}
+          <group>
+            <mesh castShadow receiveShadow>
+              <boxGeometry args={[3.2, 3.3, 19.5]} />
+              <meshStandardMaterial color="#7a1622" roughness={0.4} />
             </mesh>
+            {/* White Upper Section */}
+            <mesh position={[0, 0.65, 0]}>
+              <boxGeometry args={[3.22, 1.45, 19.3]} />
+              <meshStandardMaterial color="#eae5dc" roughness={0.4} />
+            </mesh>
+            {/* Headlight */}
+            <pointLight position={[0, 0.4, 9.9]} intensity={12} distance={25} color="#fff6dd" />
+            {/* Bogies */}
+            <mesh position={[0, -1.3, 6.0]}>
+              <boxGeometry args={[2.7, 0.5, 3.5]} />
+              <meshStandardMaterial color="#1f2428" roughness={0.8} />
+            </mesh>
+            <mesh position={[0, -1.3, -6.0]}>
+              <boxGeometry args={[2.7, 0.5, 3.5]} />
+              <meshStandardMaterial color="#1f2428" roughness={0.8} />
+            </mesh>
+          </group>
+
+          {/* Cars 1..4: EMU Passenger Coaches */}
+          {[1, 2, 3, 4].map((cIdx) => (
+            <group key={cIdx}>
+              <mesh castShadow receiveShadow>
+                <boxGeometry args={[3.2, 3.3, 19.5]} />
+                <meshStandardMaterial color="#eae5dc" roughness={0.4} />
+              </mesh>
+              {/* Lower Maroon Stripe */}
+              <mesh position={[0, -0.75, 0]}>
+                <boxGeometry args={[3.22, 0.75, 19.4]} />
+                <meshStandardMaterial color="#7a1622" roughness={0.4} />
+              </mesh>
+              {/* Bogies */}
+              <mesh position={[0, -1.3, 6.0]}>
+                <boxGeometry args={[2.7, 0.5, 3.5]} />
+                <meshStandardMaterial color="#1f2428" roughness={0.8} />
+              </mesh>
+              <mesh position={[0, -1.3, -6.0]}>
+                <boxGeometry args={[2.7, 0.5, 3.5]} />
+                <meshStandardMaterial color="#1f2428" roughness={0.8} />
+              </mesh>
+            </group>
+          ))}
+        </group>
+
+        {/* Train 3: Vande Bharat Express (White & Blue Trainset on Rail 17) */}
+        <group name="train-vande-bharat">
+          {/* Car 0: Aerodynamic Sleek Driving Cab */}
+          <group>
+            {/* Main Aerodynamic Cab Body */}
+            <mesh castShadow receiveShadow>
+              <boxGeometry args={[3.2, 3.3, 20.5]} />
+              <meshStandardMaterial color="#f8fafc" roughness={0.25} metalness={0.15} />
+            </mesh>
+            {/* Continuous Dark Tinted Window Band with Royal Blue Stripe */}
+            <mesh position={[0, 0.35, 0]}>
+              <boxGeometry args={[3.24, 0.8, 20.3]} />
+              <meshStandardMaterial color="#1e3a8a" roughness={0.3} />
+            </mesh>
+            <mesh position={[0, 0.35, 0]}>
+              <boxGeometry args={[3.26, 0.45, 19.8]} />
+              <meshStandardMaterial color="#0f172a" roughness={0.2} />
+            </mesh>
+            {/* Modern LED Headlight Beam */}
+            <pointLight position={[0, 0.4, 10.4]} intensity={18} distance={32} color="#e0f2fe" />
+            {/* Bogies */}
+            <mesh position={[0, -1.3, 6.5]}>
+              <boxGeometry args={[2.7, 0.5, 3.5]} />
+              <meshStandardMaterial color="#1f2428" roughness={0.8} />
+            </mesh>
+            <mesh position={[0, -1.3, -6.5]}>
+              <boxGeometry args={[2.7, 0.5, 3.5]} />
+              <meshStandardMaterial color="#1f2428" roughness={0.8} />
+            </mesh>
+          </group>
+
+          {/* Cars 1..4: Vande Bharat Passenger Coaches */}
+          {[1, 2, 3, 4].map((cIdx) => (
+            <group key={cIdx}>
+              <mesh castShadow receiveShadow>
+                <boxGeometry args={[3.2, 3.3, 21.0]} />
+                <meshStandardMaterial color="#f8fafc" roughness={0.25} metalness={0.15} />
+              </mesh>
+              {/* Blue cheatline & window band */}
+              <mesh position={[0, 0.35, 0]}>
+                <boxGeometry args={[3.24, 0.8, 20.8]} />
+                <meshStandardMaterial color="#1e3a8a" roughness={0.3} />
+              </mesh>
+              <mesh position={[0, 0.35, 0]}>
+                <boxGeometry args={[3.26, 0.45, 20.2]} />
+                <meshStandardMaterial color="#0f172a" roughness={0.2} />
+              </mesh>
+              {/* Bogies */}
+              <mesh position={[0, -1.3, 6.8]}>
+                <boxGeometry args={[2.7, 0.5, 3.5]} />
+                <meshStandardMaterial color="#1f2428" roughness={0.8} />
+              </mesh>
+              <mesh position={[0, -1.3, -6.8]}>
+                <boxGeometry args={[2.7, 0.5, 3.5]} />
+                <meshStandardMaterial color="#1f2428" roughness={0.8} />
+              </mesh>
+            </group>
           ))}
         </group>
       </group>
