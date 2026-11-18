@@ -163,8 +163,8 @@ export function Context({ data }: { data: SceneData }) {
         const cheb = Math.max(Math.abs(jx), Math.abs(jz))
         const dist = Math.hypot(jx, jz)
 
-        // Only populate outside dense mapped boundary or in wide unmapped gaps
-        if (cheb < ext * 0.95 && isNearBuilding(jx, jz, 28)) continue
+        // Strictly outside the mapped city boundary: context is ONLY for the distant horizon skyline beyond the city
+        if (cheb < ext + 15) continue
         if (dist > R) continue
 
         // Thinning at distant horizon
