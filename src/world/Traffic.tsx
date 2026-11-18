@@ -175,8 +175,11 @@ function colorGeo(geo: THREE.BufferGeometry, colorHex: string): THREE.BufferGeom
   return geo
 }
 
-// Extraction of merged geometry from Blender GLB with vertex color mapping
-function extractMergedGeometry(scene: THREE.Group): THREE.BufferGeometry | null {
+// Extraction of merged geometry from Blender GLB with vertex color mapping and wheel alignment
+function extractMergedGeometry(
+  scene: THREE.Group,
+  options?: { maxHalfWidth?: number; wheelTuck?: number }
+): THREE.BufferGeometry | null {
   try {
     const geos: THREE.BufferGeometry[] = []
     scene.updateMatrixWorld(true)
@@ -193,6 +196,38 @@ function extractMergedGeometry(scene: THREE.Group): THREE.BufferGeometry | null 
           const colors = new Float32Array(g.attributes.position.count * 3).fill(1)
           g.setAttribute('color', new THREE.BufferAttribute(colors, 3))
         }
+
+        // Apply wheel tuck and width clamping if requested
+        if (options && (options.wheelTuck || options.maxHalfWidth)) {
+          const pos = g.attributes.position
+          const col = g.attributes.color
+          const { wheelTuck = 0, maxHalfWidth = 999 } = options
+          for (let i = 0; i < pos.count; i++) {
+            let x = pos.getX(i)
+            const y = pos.getY(i)
+            const r = col ? col.getX(i) : 1
+            const gVal = col ? col.getY(i) : 1
+            const b = col ? col.getZ(i) : 1
+
+            // Wheels and hubcaps are low to the ground (y < 1.05) and either dark rubber or wheel hub
+            const isWheel = ((r < 0.25 && gVal < 0.25 && b < 0.25) || Math.abs(x) > 0.6) && y < 1.05
+            if (isWheel && wheelTuck > 0) {
+              if (x > 0.25) x = Math.max(0.25, x - wheelTuck)
+              else if (x < -0.25) x = Math.min(-0.25, x + wheelTuck)
+            }
+
+            // Clamp max half width so no vertex protrudes past vehicle body
+            if (Math.abs(x) > maxHalfWidth) {
+              x = Math.sign(x) * maxHalfWidth
+            }
+            pos.setX(i, x)
+          }
+          pos.needsUpdate = true
+          g.computeVertexNormals()
+          g.computeBoundingBox()
+          g.computeBoundingSphere()
+        }
+
         geos.push(g)
       }
     })
@@ -296,12 +331,12 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
   const cartGltf = useGLTF('/models/hand_pulled_cart.glb')
   const truckGltf = useGLTF('/models/goods_truck.glb')
 
-  const taxiGeo = useMemo(() => extractMergedGeometry(taxiGltf.scene) || createFallbackTaxi(), [taxiGltf])
-  const busGeo = useMemo(() => extractMergedGeometry(busGltf.scene) || createFallbackBus(), [busGltf])
-  const autoGeo = useMemo(() => extractMergedGeometry(autoGltf.scene) || createFallbackAuto(), [autoGltf])
+  const taxiGeo = useMemo(() => extractMergedGeometry(taxiGltf.scene, { maxHalfWidth: 0.86, wheelTuck: 0.12 }) || createFallbackTaxi(), [taxiGltf])
+  const busGeo = useMemo(() => extractMergedGeometry(busGltf.scene, { maxHalfWidth: 1.23, wheelTuck: 0.22 }) || createFallbackBus(), [busGltf])
+  const autoGeo = useMemo(() => extractMergedGeometry(autoGltf.scene, { maxHalfWidth: 0.68, wheelTuck: 0.08 }) || createFallbackAuto(), [autoGltf])
   const bikeGeo = useMemo(() => extractMergedGeometry(bikeGltf.scene) || createFallbackBike(), [bikeGltf])
   const cartGeo = useMemo(() => extractMergedGeometry(cartGltf.scene) || createFallbackCart(), [cartGltf])
-  const truckGeo = useMemo(() => extractMergedGeometry(truckGltf.scene) || createFallbackTruck(), [truckGltf])
+  const truckGeo = useMemo(() => extractMergedGeometry(truckGltf.scene, { maxHalfWidth: 1.20, wheelTuck: 0.24 }) || createFallbackTruck(), [truckGltf])
   const pedGeo = useMemo(createPedestrianGeometry, [])
 
   const lightGeo = useMemo(() => new THREE.BoxGeometry(0.2, 0.16, 0.12), [])
@@ -330,7 +365,7 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
   const headLightMat = useMemo(() => new THREE.MeshBasicMaterial({ color: new THREE.Color('#fff9db') }), [])
   const tailLightMat = useMemo(() => new THREE.MeshBasicMaterial({ color: new THREE.Color('#ff1a00') }), [])
 
-  // Build Viable Road Paths across Complete City from OSM Roads
+  // Build Viable Road Paths across Complete City from OSM Roads (focus on continuous major avenues)
   const cityRoadPaths = useMemo<RoadPath[]>(() => {
     const list: RoadPath[] = []
     data.roads.forEach((r, idx) => {
@@ -345,8 +380,8 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
         totalLen += d
         cumDist.push(totalLen)
       }
-      // Keep drivable roads of at least 25m length
-      if (totalLen >= 25) {
+      // Select primary avenues and prominent thoroughfares (>=35m length, width >= 7m or arterial class)
+      if (totalLen >= 35 && (r.c === 0 || r.w >= 7.0)) {
         list.push({ idx, pts, cumDist, totalLen, w: r.w, c: r.c })
       }
     })
@@ -358,131 +393,173 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
   const vehicles = useMemo<VehicleAgent[]>(() => {
     const list: VehicleAgent[] = []
     
-    // 1. Howrah Bridge Dedicated Traffic (220 vehicles in 8 lanes)
-    const bridgeCount = 220
-    for (let i = 0; i < bridgeCount; i++) {
-      const east = i % 2 === 0
-      const dir = east ? 1 : -1
-      const lanes = east ? BRIDGE_LANES_EAST : BRIDGE_LANES_WEST
-      
-      const r = Math.random()
-      let kind: VehicleKind
-      let lane: number
-      let speed: number
-      let len: number
-      let wid: number
-      let hei: number
+    // 1. Howrah Bridge Dedicated Traffic: 72 vehicles organized into 8 strict lanes (9 per lane)
+    // Indian Left-Hand Drive convention with realistic vehicle allocation per lane
+    const bridgeLanesConfig = [
+      // Eastbound Lanes (dir = +1)
+      {
+        lane: BRIDGE_LANES_EAST.slowKerb,
+        dir: 1,
+        allowed: [
+          { kind: 'cart', weight: 3, len: 3.6, wid: 1.4, hei: 1.2, speed: 2.2 },
+          { kind: 'truck', weight: 4, len: 8.2, wid: 2.4, hei: 2.8, speed: 7.0 },
+          { kind: 'bus', weight: 3, len: 9.6, wid: 2.45, hei: 3.1, speed: 8.0 },
+        ],
+      },
+      {
+        lane: BRIDGE_LANES_EAST.middle1,
+        dir: 1,
+        allowed: [
+          { kind: 'bus', weight: 5, len: 9.6, wid: 2.45, hei: 3.1, speed: 8.5 },
+          { kind: 'truck', weight: 3, len: 8.2, wid: 2.4, hei: 2.8, speed: 7.5 },
+          { kind: 'taxi', weight: 2, len: 4.4, wid: 1.72, hei: 1.5, speed: 10.5 },
+        ],
+      },
+      {
+        lane: BRIDGE_LANES_EAST.middle2,
+        dir: 1,
+        allowed: [
+          { kind: 'taxi', weight: 5, len: 4.4, wid: 1.72, hei: 1.5, speed: 11.5 },
+          { kind: 'auto', weight: 3, len: 2.8, wid: 1.35, hei: 1.7, speed: 9.5 },
+          { kind: 'bike', weight: 2, len: 2.0, wid: 0.6, hei: 1.5, speed: 12.0 },
+        ],
+      },
+      {
+        lane: BRIDGE_LANES_EAST.fastInner,
+        dir: 1,
+        allowed: [
+          { kind: 'taxi', weight: 6, len: 4.4, wid: 1.72, hei: 1.5, speed: 12.5 },
+          { kind: 'bike', weight: 4, len: 2.0, wid: 0.6, hei: 1.5, speed: 13.5 },
+        ],
+      },
+      // Westbound Lanes (dir = -1)
+      {
+        lane: BRIDGE_LANES_WEST.fastInner,
+        dir: -1,
+        allowed: [
+          { kind: 'taxi', weight: 6, len: 4.4, wid: 1.72, hei: 1.5, speed: 12.5 },
+          { kind: 'bike', weight: 4, len: 2.0, wid: 0.6, hei: 1.5, speed: 13.5 },
+        ],
+      },
+      {
+        lane: BRIDGE_LANES_WEST.middle2,
+        dir: -1,
+        allowed: [
+          { kind: 'taxi', weight: 5, len: 4.4, wid: 1.72, hei: 1.5, speed: 11.5 },
+          { kind: 'auto', weight: 3, len: 2.8, wid: 1.35, hei: 1.7, speed: 9.5 },
+          { kind: 'bike', weight: 2, len: 2.0, wid: 0.6, hei: 1.5, speed: 12.0 },
+        ],
+      },
+      {
+        lane: BRIDGE_LANES_WEST.middle1,
+        dir: -1,
+        allowed: [
+          { kind: 'bus', weight: 5, len: 9.6, wid: 2.45, hei: 3.1, speed: 8.5 },
+          { kind: 'truck', weight: 3, len: 8.2, wid: 2.4, hei: 2.8, speed: 7.5 },
+          { kind: 'taxi', weight: 2, len: 4.4, wid: 1.72, hei: 1.5, speed: 10.5 },
+        ],
+      },
+      {
+        lane: BRIDGE_LANES_WEST.slowKerb,
+        dir: -1,
+        allowed: [
+          { kind: 'cart', weight: 3, len: 3.6, wid: 1.4, hei: 1.2, speed: 2.2 },
+          { kind: 'truck', weight: 4, len: 8.2, wid: 2.4, hei: 2.8, speed: 7.0 },
+          { kind: 'bus', weight: 3, len: 9.6, wid: 2.45, hei: 3.1, speed: 8.0 },
+        ],
+      },
+    ]
 
-      if (r < 0.08) {
-        kind = 'cart'
-        lane = lanes.slowKerb
-        speed = 2.0 + Math.random() * 0.6
-        len = 3.6; wid = 1.4; hei = 1.2
-      } else if (r < 0.20) {
-        kind = 'truck'
-        lane = Math.random() < 0.65 ? lanes.slowKerb : lanes.middle1
-        speed = 7.0 + Math.random() * 2.5
-        len = 8.2; wid = 2.5; hei = 2.8
-      } else if (r < 0.36) {
-        kind = 'bus'
-        lane = Math.random() < 0.6 ? lanes.middle1 : lanes.slowKerb
-        speed = 8.5 + Math.random() * 3.0
-        len = 9.6; wid = 2.45; hei = 3.1
-      } else if (r < 0.52) {
-        kind = 'auto'
-        lane = Math.random() < 0.6 ? lanes.middle2 : lanes.slowKerb
-        speed = 9.5 + Math.random() * 3.0
-        len = 2.8; wid = 1.35; hei = 1.7
-      } else if (r < 0.72) {
-        kind = 'bike'
-        lane = Math.random() < 0.65 ? lanes.fastInner : lanes.middle2
-        speed = 11.0 + Math.random() * 4.0
-        len = 2.0; wid = 0.6; hei = 1.5
-      } else {
-        kind = 'taxi'
-        lane = Math.random() < 0.5 ? lanes.middle2 : (Math.random() < 0.5 ? lanes.fastInner : lanes.middle1)
-        speed = 11.5 + Math.random() * 3.5
-        len = 4.4; wid = 1.72; hei = 1.5
-      }
+    const VEHICLES_PER_LANE = 9
+    const span = TOTAL_HALF_SPAN * 2
 
-      const s = (Math.random() * 2 - 1) * TOTAL_HALF_SPAN
-      list.push({
-        kind,
-        isBridge: true,
-        s,
-        laneOffset: lane,
-        targetLane: lane,
-        dir,
-        speed,
-        targetSpeed: speed,
-        length: len,
-        width: wid,
-        height: hei,
-        isFiltering: false,
+    bridgeLanesConfig.forEach((cfg, laneIdx) => {
+      const pool: any[] = []
+      cfg.allowed.forEach((item) => {
+        for (let w = 0; w < item.weight; w++) pool.push(item)
       })
-    }
 
-    // 2. Complete City Road Network Traffic (680 vehicles distributed across 900+ OSM road paths)
+      for (let k = 0; k < VEHICLES_PER_LANE; k++) {
+        const spec = pool[(k + laneIdx * 3) % pool.length]
+        // Stagger initial s coordinate evenly along the bridge span with lane phase shift
+        const phase = (k + ((laneIdx * 0.28) % 1)) / VEHICLES_PER_LANE
+        const s = -TOTAL_HALF_SPAN + phase * span
+        const baseSpeed = spec.speed * (0.92 + ((k * 0.17) % 0.16))
+
+        list.push({
+          kind: spec.kind as VehicleKind,
+          isBridge: true,
+          s,
+          laneOffset: cfg.lane,
+          targetLane: cfg.lane,
+          dir: cfg.dir,
+          speed: baseSpeed,
+          targetSpeed: baseSpeed,
+          length: spec.len,
+          width: spec.wid,
+          height: spec.hei,
+          isFiltering: false,
+        })
+      }
+    })
+
+    // 2. Complete City Road Network Traffic (380 vehicles distributed across major avenues)
     if (cityRoadPaths.length > 0) {
-      // Weight road paths by length and hierarchy (Arterials get more traffic)
-      const weights = cityRoadPaths.map((p) => p.totalLen * (p.c === 0 ? 3.5 : p.c === 1 ? 1.0 : 0.4))
+      const weights = cityRoadPaths.map((p) => p.totalLen * (p.c === 0 ? 3.0 : 1.2))
       const totalWeight = weights.reduce((a, b) => a + b, 0)
-      const targetCityCount = 680
+      const targetCityCount = 380
 
       for (let pi = 0; pi < cityRoadPaths.length; pi++) {
         const path = cityRoadPaths[pi]
-        const numOnThisPath = Math.min(14, Math.round((weights[pi] / totalWeight) * targetCityCount))
+        const numOnThisPath = Math.min(8, Math.max(1, Math.round((weights[pi] / totalWeight) * targetCityCount)))
         if (numOnThisPath === 0) continue
 
         for (let k = 0; k < numOnThisPath; k++) {
           const dir = k % 2 === 0 ? 1 : -1
-          const r = Math.random()
+          const r = (k * 0.37 + pi * 0.19) % 1.0
           let kind: VehicleKind
           let speed: number
           let len: number
           let wid: number
           let hei: number
 
-          // Indian Left-Hand Drive Lateral Offset from Road Centerline:
-          // Wide roads (width >= 8m): slow vehicles at 0.32 * w, fast at 0.15 * w
-          // Standard streets: 0.22 * w
-          const isWide = path.w >= 8
+          const isWide = path.w >= 8.5
           let lateralRatio: number
 
           if (r < 0.08) {
             kind = 'cart'
-            speed = 2.0 + Math.random() * 0.5
+            speed = 2.0 + (r * 0.5)
             len = 3.6; wid = 1.4; hei = 1.2
-            lateralRatio = isWide ? 0.34 : 0.22
-          } else if (r < 0.18) {
+            lateralRatio = isWide ? 0.32 : 0.22
+          } else if (r < 0.20) {
             kind = 'truck'
-            speed = 7.0 + Math.random() * 2.5
-            len = 8.2; wid = 2.5; hei = 2.8
-            lateralRatio = isWide ? 0.30 : 0.22
-          } else if (r < 0.32) {
+            speed = 7.0 + (r * 2.0)
+            len = 8.2; wid = 2.4; hei = 2.8
+            lateralRatio = isWide ? 0.28 : 0.22
+          } else if (r < 0.36) {
             kind = 'bus'
-            speed = 8.0 + Math.random() * 2.8
+            speed = 8.0 + (r * 2.5)
             len = 9.6; wid = 2.45; hei = 3.1
             lateralRatio = isWide ? 0.25 : 0.20
-          } else if (r < 0.48) {
+          } else if (r < 0.52) {
             kind = 'auto'
-            speed = 9.0 + Math.random() * 3.0
+            speed = 9.0 + (r * 2.5)
             len = 2.8; wid = 1.35; hei = 1.7
             lateralRatio = isWide ? 0.22 : 0.20
-          } else if (r < 0.68) {
+          } else if (r < 0.70) {
             kind = 'bike'
-            speed = 10.5 + Math.random() * 3.5
+            speed = 10.5 + (r * 3.0)
             len = 2.0; wid = 0.6; hei = 1.5
-            lateralRatio = isWide ? 0.14 : 0.18
+            lateralRatio = isWide ? 0.15 : 0.18
           } else {
-            kind = 'taxi' // Dominant Kolkata Yellow Taxi
-            speed = 11.0 + Math.random() * 3.2
+            kind = 'taxi'
+            speed = 11.0 + (r * 3.0)
             len = 4.4; wid = 1.72; hei = 1.5
-            lateralRatio = isWide ? 0.16 : 0.20
+            lateralRatio = isWide ? 0.18 : 0.20
           }
 
-          // Initial s spread evenly along the road segment
-          const s = ((k + Math.random() * 0.5) / numOnThisPath) * path.totalLen
+          // Spread initial s evenly along the road segment
+          const s = ((k + 0.5) / numOnThisPath) * path.totalLen
           const laneOffset = path.w * lateralRatio
 
           list.push({
@@ -701,13 +778,14 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
   useFrame((_, delta) => {
     const dt = Math.min(delta, 0.08)
 
-    // 1. Multi-Agent Simulation: Car-Following & Two-Wheeler Filtering
+    // 1. Multi-Agent Simulation: Car-Following, Collision Avoidance, IDM
     for (let i = 0; i < vehicles.length; i++) {
       const v = vehicles[i]
+      const span = v.isBridge ? (TOTAL_HALF_SPAN * 2) : (v.path?.totalLen || 1000)
 
-      // Leader search within the same corridor
-      let minGap = Infinity
+      let minClearance = Infinity
       let leadSpeed = v.targetSpeed
+      let leadAgent: VehicleAgent | null = null
 
       for (let j = 0; j < vehicles.length; j++) {
         if (i === j) continue
@@ -720,41 +798,70 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
 
         // Check lateral proximity
         const laneDiff = Math.abs(other.laneOffset - v.laneOffset)
-        if (laneDiff < 1.4) {
-          const gap = (other.s - v.s) * v.dir
-          if (gap > 0 && gap < minGap) {
-            minGap = gap - (v.length * 0.5 + other.length * 0.5)
-            leadSpeed = other.speed
+        const combinedHalfWidth = (v.width + other.width) * 0.5
+        if (laneDiff < combinedHalfWidth + 0.35) {
+          // Forward distance along travel direction with cyclic wrap-around
+          let dist = (other.s - v.s) * v.dir
+          if (dist < 0) dist += span
+
+          if (dist > 0 && dist < span * 0.5) {
+            const clearance = dist - (v.length * 0.5 + other.length * 0.5)
+            if (clearance < minClearance) {
+              minClearance = clearance
+              leadSpeed = other.speed
+              leadAgent = other
+            }
           }
         }
       }
 
       // Two-Wheeler Gap Filtering: when traffic slows ahead, bikes split lanes and filter through!
       if (v.kind === 'bike') {
-        if (minGap < 9.0 && leadSpeed < 8.0 && !v.isFiltering) {
+        if (minClearance < 8.0 && leadSpeed < 6.0 && !v.isFiltering) {
           v.isFiltering = true
-          // Shift laterally between lanes
-          v.targetLane = v.laneOffset + (v.dir > 0 ? 1.2 : -1.2)
-        } else if (minGap > 14.0 && v.isFiltering) {
+          v.targetLane = v.laneOffset + (v.dir > 0 ? 1.1 : -1.1)
+        } else if (minClearance > 14.0 && v.isFiltering) {
           v.isFiltering = false
-          // Return to original lane
-          v.targetLane = v.isBridge ? (v.dir > 0 ? BRIDGE_LANES_EAST.fastInner : BRIDGE_LANES_WEST.fastInner) : (v.path ? v.path.w * 0.16 : 1.2)
+          v.targetLane = v.isBridge 
+            ? (v.dir > 0 ? BRIDGE_LANES_EAST.fastInner : BRIDGE_LANES_WEST.fastInner) 
+            : (v.path ? (v.dir > 0 ? -v.path.w * 0.18 : v.path.w * 0.18) : 1.2)
         }
       }
 
-      // Smooth lane changing
-      if (Math.abs(v.targetLane - v.laneOffset) > 0.05) {
+      // Smooth lateral lane changing
+      if (Math.abs(v.targetLane - v.laneOffset) > 0.02) {
         v.laneOffset = THREE.MathUtils.lerp(v.laneOffset, v.targetLane, dt * 2.5)
       }
 
       // Safe Car-Following Rule (IDM Deceleration) with live traffic speed factor
       const effectiveTargetSpeed = v.targetSpeed * speedFactor
-      const safeDistance = Math.max(3.0, 3.5 + v.speed * 0.75)
-      if (minGap < safeDistance) {
-        const targetV = Math.max(0, leadSpeed * Math.max(0, (minGap - 1.5) / safeDistance))
-        v.speed = THREE.MathUtils.lerp(v.speed, targetV, dt * 4.0)
+      const minSafeGap = 3.0 // minimum standing gap (meters)
+      const timeHeadway = 1.2 // safe time headway (seconds)
+      const desiredGap = minSafeGap + Math.max(0, v.speed) * timeHeadway
+
+      if (leadAgent && minClearance < 1.5) {
+        // HARD ANTI-COLLISION CLAMPING: Vehicles must never penetrate!
+        v.speed = 0
+        if (minClearance < 1.0) {
+          const reqDist = v.length * 0.5 + leadAgent.length * 0.5 + 1.8
+          v.s = leadAgent.s - v.dir * reqDist
+          if (v.isBridge) {
+            if (v.s > TOTAL_HALF_SPAN) v.s -= span
+            if (v.s < -TOTAL_HALF_SPAN) v.s += span
+          } else if (v.path) {
+            if (v.s < 0) v.s += span
+            if (v.s > span) v.s -= span
+          }
+        }
+      } else if (leadAgent && minClearance < desiredGap) {
+        // Smooth deceleration
+        const gapRatio = Math.max(0, (minClearance - minSafeGap) / (desiredGap - minSafeGap + 0.001))
+        const targetV = Math.min(leadSpeed * gapRatio, effectiveTargetSpeed)
+        const decelRate = minClearance < 4.0 ? 8.0 : 4.0
+        v.speed = THREE.MathUtils.lerp(v.speed, Math.max(0, targetV), dt * decelRate)
       } else {
-        v.speed = THREE.MathUtils.lerp(v.speed, effectiveTargetSpeed, dt * 2.0)
+        // Free-flow acceleration
+        v.speed = THREE.MathUtils.lerp(v.speed, effectiveTargetSpeed, dt * 1.8)
       }
 
       // Advance vehicle along road
@@ -762,11 +869,11 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
 
       // Wrap around road boundaries
       if (v.isBridge) {
-        if (v.dir > 0 && v.s > TOTAL_HALF_SPAN) v.s = -TOTAL_HALF_SPAN
-        if (v.dir < 0 && v.s < -TOTAL_HALF_SPAN) v.s = TOTAL_HALF_SPAN
+        if (v.dir > 0 && v.s > TOTAL_HALF_SPAN) v.s -= span
+        if (v.dir < 0 && v.s < -TOTAL_HALF_SPAN) v.s += span
       } else if (v.path) {
-        if (v.dir > 0 && v.s > v.path.totalLen) v.s = 0
-        if (v.dir < 0 && v.s < 0) v.s = v.path.totalLen
+        if (v.dir > 0 && v.s > v.path.totalLen) v.s -= span
+        if (v.dir < 0 && v.s < 0) v.s += span
       }
     }
 
