@@ -145,6 +145,7 @@ function World({
   trains = [],
   hazeDensity = 0.00023,
   hazeMax = 0.96,
+  enableFog = false,
 }: {
   data: SceneData
   shot: Shot
@@ -158,6 +159,7 @@ function World({
   trains?: TrainStationDeparture[]
   hazeDensity?: number
   hazeMax?: number
+  enableFog?: boolean
 }) {
   const focus = useRef(new THREE.Vector3())
   const riverShape = useMemo(() => new THREE.Shape(toPts(data.river).map((p) => new THREE.Vector2(p[0], -p[1]))), [data])
@@ -187,7 +189,7 @@ function World({
         speed={speed}
         setSpeed={setSpeed}
       />
-      <Effects focus={focus} hazeDensity={hazeDensity} hazeMax={hazeMax} />
+      <Effects focus={focus} hazeDensity={hazeDensity} hazeMax={hazeMax} enableFog={enableFog} />
       <Probe onFreeze={onFreeze} />
     </>
   )
@@ -202,6 +204,7 @@ export function App() {
   const [dpr, setDpr] = useState(Math.min(window.devicePixelRatio || 1, MAX_DPR))
   const fixedDpr = params.has('dpr')
   const [frozen, setFrozen] = useState(false)
+  const [enableFog, setEnableFog] = useState(params.get('fog') === '1')
 
   // Stage 3: Live telemetry streaming with disk cache fallback
   const { telemetry, loading: telemLoading, error: telemError, refresh: telemRefresh } = useLiveData(20_000)
@@ -245,6 +248,8 @@ export function App() {
         loading={telemLoading}
         error={telemError}
         onRefresh={telemRefresh}
+        enableFog={enableFog}
+        onToggleFog={() => setEnableFog((prev) => !prev)}
       />
 
       <Canvas
@@ -275,6 +280,7 @@ export function App() {
             trains={trains}
             hazeDensity={hazeDensity}
             hazeMax={hazeMax}
+            enableFog={enableFog}
           />
         </Suspense>
       </Canvas>

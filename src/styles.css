@@ -189,6 +189,34 @@ kbd {
   background: rgba(255, 215, 153, 0.3);
 }
 
+.telem-btn-fog {
+  border-radius: 999px;
+  padding: 4px 11px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+}
+.telem-btn-fog.fog-off {
+  background: rgba(34, 197, 94, 0.2);
+  border: 1px solid rgba(34, 197, 94, 0.5);
+  color: #86efac;
+}
+.telem-btn-fog.fog-off:hover {
+  background: rgba(34, 197, 94, 0.35);
+}
+.telem-btn-fog.fog-on {
+  background: rgba(245, 158, 11, 0.2);
+  border: 1px solid rgba(245, 158, 11, 0.5);
+  color: #fcd34d;
+}
+.telem-btn-fog.fog-on:hover {
+  background: rgba(245, 158, 11, 0.35);
+}
+
 /* Pulses */
 .telem-pulse {
   display: inline-block;

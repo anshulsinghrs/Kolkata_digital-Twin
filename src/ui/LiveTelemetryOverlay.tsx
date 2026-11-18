@@ -64,11 +64,15 @@ export function LiveTelemetryOverlay({
   loading,
   error,
   onRefresh,
+  enableFog = false,
+  onToggleFog,
 }: {
   telemetry: LiveTelemetry | null
   loading: boolean
   error: string | null
   onRefresh: () => void
+  enableFog?: boolean
+  onToggleFog?: () => void
 }) {
   const [open, setOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<'all' | 'weather' | 'air' | 'traffic' | 'flights' | 'trains'>('all')
@@ -133,6 +137,18 @@ export function LiveTelemetryOverlay({
         </div>
 
         <div className="telem-ticker-actions">
+          {onToggleFog && (
+            <button
+              className={`telem-btn-fog ${enableFog ? 'fog-on' : 'fog-off'}`}
+              onClick={(e) => {
+                e.stopPropagation()
+                onToggleFog()
+              }}
+              title={enableFog ? 'Atmospheric fog is active. Click to remove fog.' : 'Fog is removed (Crystal Clear). Click to enable live atmospheric fog.'}
+            >
+              {enableFog ? '🌫️ Fog: ON' : '☀️ Clear (No Fog)'}
+            </button>
+          )}
           <button
             className="telem-btn-refresh"
             onClick={(e) => {

@@ -22,14 +22,16 @@ export function Effects({
   focus: _focus,
   hazeDensity = 0.00023,
   hazeMax = 0.96,
+  enableFog = false,
 }: {
   focus: React.RefObject<THREE.Vector3>
   hazeDensity?: number
   hazeMax?: number
+  enableFog?: boolean
 }) {
   return (
     <EffectComposer multisampling={0} enableNormalPass={false} frameBufferType={THREE.HalfFloatType}>
-      <Haze density={hazeDensity} max={hazeMax} />
+      {enableFog && <Haze density={hazeDensity} max={hazeMax} />}
       <ToneMapping mode={ToneMappingMode.AGX} />
       <Noise blendFunction={BlendFunction.OVERLAY} opacity={0.065} />
       <Vignette offset={0.36} darkness={0.32} />

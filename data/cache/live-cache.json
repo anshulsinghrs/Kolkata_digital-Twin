@@ -1,30 +1,30 @@
 {
-  "serverTime": "2026-11-16T17:54:28.077Z",
+  "serverTime": "2026-11-18T18:12:21.003Z",
   "fromDiskCache": false,
-  "lastDiskCacheTime": "2026-11-16T17:05:54.696Z",
+  "lastDiskCacheTime": "2026-11-18T18:04:06.881Z",
   "weather": {
     "temperature": {
-      "value": 23.8,
+      "value": 22.5,
       "unit": "°C",
       "category": "MODELLED",
       "source": "Open-Meteo Forecast (ECMWF/GFS numerical weather model)",
-      "timestamp": "2026-11-16T17:45:00.000Z",
+      "timestamp": "2026-11-18T18:00:00.000Z",
       "status": "ok"
     },
     "relativeHumidity": {
-      "value": 80,
+      "value": 79,
       "unit": "%",
       "category": "MODELLED",
       "source": "Open-Meteo Forecast (ECMWF/GFS numerical weather model)",
-      "timestamp": "2026-11-16T17:45:00.000Z",
+      "timestamp": "2026-11-18T18:00:00.000Z",
       "status": "ok"
     },
     "apparentTemperature": {
-      "value": 27,
+      "value": 25,
       "unit": "°C",
       "category": "MODELLED",
       "source": "Open-Meteo Forecast (Humidex / Wind Chill model)",
-      "timestamp": "2026-11-16T17:45:00.000Z",
+      "timestamp": "2026-11-18T18:00:00.000Z",
       "status": "ok"
     },
     "precipitation": {
@@ -32,7 +32,7 @@
       "unit": "mm",
       "category": "MODELLED",
       "source": "Open-Meteo Forecast (NWP grid precipitation)",
-      "timestamp": "2026-11-16T17:45:00.000Z",
+      "timestamp": "2026-11-18T18:00:00.000Z",
       "status": "ok"
     },
     "weatherCode": {
@@ -40,57 +40,57 @@
       "unit": "WMO code",
       "category": "MODELLED",
       "source": "Open-Meteo Forecast (WMO 4677 synoptic interpretation)",
-      "timestamp": "2026-11-16T17:45:00.000Z",
+      "timestamp": "2026-11-18T18:00:00.000Z",
       "status": "ok"
     },
     "windSpeed": {
-      "value": 4,
+      "value": 4.3,
       "unit": "km/h",
       "category": "MODELLED",
       "source": "Open-Meteo Forecast (10m boundary layer model)",
-      "timestamp": "2026-11-16T17:45:00.000Z",
+      "timestamp": "2026-11-18T18:00:00.000Z",
       "status": "ok"
     },
     "windDirection": {
-      "value": 95,
+      "value": 5,
       "unit": "°",
       "category": "MODELLED",
       "source": "Open-Meteo Forecast (10m boundary layer model)",
-      "timestamp": "2026-11-16T17:45:00.000Z",
+      "timestamp": "2026-11-18T18:00:00.000Z",
       "status": "ok"
     }
   },
   "airQuality": {
     "pm25_modelled": {
-      "value": 244.9,
+      "value": 127.1,
       "unit": "µg/m³",
       "category": "MODELLED",
       "source": "Open-Meteo Air Quality (Copernicus CAMS regional atmospheric model)",
-      "timestamp": "2026-11-16T17:00:00.000Z",
+      "timestamp": "2026-11-18T18:00:00.000Z",
       "status": "ok"
     },
     "pm10_modelled": {
-      "value": 268.2,
+      "value": 134.1,
       "unit": "µg/m³",
       "category": "MODELLED",
       "source": "Open-Meteo Air Quality (Copernicus CAMS regional atmospheric model)",
-      "timestamp": "2026-11-16T17:00:00.000Z",
+      "timestamp": "2026-11-18T18:00:00.000Z",
       "status": "ok"
     },
     "usAqi_modelled": {
-      "value": 265,
+      "value": 197,
       "unit": "US AQI",
       "category": "MODELLED",
       "source": "Open-Meteo Air Quality (EPA AQI standard computation)",
-      "timestamp": "2026-11-16T17:00:00.000Z",
+      "timestamp": "2026-11-18T18:00:00.000Z",
       "status": "ok"
     },
     "europeanAqi_modelled": {
-      "value": 142,
+      "value": 95,
       "unit": "EAQI",
       "category": "MODELLED",
       "source": "Open-Meteo Air Quality (EEA European Air Quality Index)",
-      "timestamp": "2026-11-16T17:00:00.000Z",
+      "timestamp": "2026-11-18T18:00:00.000Z",
       "status": "ok"
     },
     "cpcb_pm25_measured": {
@@ -118,90 +118,90 @@
     "activeFlights": {
       "value": [
         {
-          "icao24": "80169e",
-          "callsign": "AKJ825U",
+          "icao24": "8008c7",
+          "callsign": "FLW ME 2",
           "originCountry": "India",
-          "timePosition": 1794851530,
+          "timePosition": 1795025533,
           "altitudeMeters": null,
-          "velocityKmph": 10.2,
-          "headingDeg": 276,
+          "velocityKmph": 13,
+          "headingDeg": 250,
           "verticalRateMps": null,
           "onGround": true,
-          "lat": 22.6566,
-          "lon": 88.4461,
-          "worldX": 10206,
-          "worldZ": -7959,
-          "distKmFromAirport": 0.2
+          "lat": 22.6501,
+          "lon": 88.4446,
+          "worldX": 10052,
+          "worldZ": -7236,
+          "distKmFromAirport": 0.6
         },
         {
-          "icao24": "8014df",
-          "callsign": "IGO141W",
-          "originCountry": "India",
-          "timePosition": 1794851657,
-          "altitudeMeters": 30,
-          "velocityKmph": 318.6,
-          "headingDeg": 6,
-          "verticalRateMps": -2.9,
-          "onGround": false,
-          "lat": 22.6414,
-          "lon": 88.4462,
-          "worldX": 10217,
-          "worldZ": -6267,
-          "distKmFromAirport": 1.5
-        },
-        {
-          "icao24": "8015d3",
-          "callsign": "IGO923",
-          "originCountry": "India",
-          "timePosition": 1794851615,
-          "altitudeMeters": 15,
-          "velocityKmph": 1.8,
-          "headingDeg": 338,
+          "icao24": "88045a",
+          "callsign": "AIQ120",
+          "originCountry": "Thailand",
+          "timePosition": 1795025525,
+          "altitudeMeters": -23,
+          "velocityKmph": 46.3,
+          "headingDeg": 186,
           "verticalRateMps": null,
           "onGround": true,
-          "lat": 22.6408,
-          "lon": 88.4399,
-          "worldX": 9569,
-          "worldZ": -6200,
-          "distKmFromAirport": 1.7
+          "lat": 22.6618,
+          "lon": 88.4448,
+          "worldX": 10073,
+          "worldZ": -8538,
+          "distKmFromAirport": 0.8
         },
         {
-          "icao24": "8015d8",
-          "callsign": "IGO775V",
+          "icao24": "801908",
+          "callsign": "IGO53LM",
           "originCountry": "India",
-          "timePosition": 1794851646,
+          "timePosition": 1795025511,
           "altitudeMeters": null,
-          "velocityKmph": 0,
-          "headingDeg": 338,
+          "velocityKmph": 24.1,
+          "headingDeg": 186,
           "verticalRateMps": null,
           "onGround": true,
-          "lat": 22.6405,
-          "lon": 88.4396,
-          "worldX": 9538,
-          "worldZ": -6167,
-          "distKmFromAirport": 1.7
+          "lat": 22.6456,
+          "lon": 88.4418,
+          "worldX": 9764,
+          "worldZ": -6735,
+          "distKmFromAirport": 1.1
         },
         {
-          "icao24": "3c4589",
-          "callsign": "BOX548",
-          "originCountry": "Germany",
-          "timePosition": 1794851654,
-          "altitudeMeters": 10668,
-          "velocityKmph": 978.9,
-          "headingDeg": 125,
-          "verticalRateMps": 0,
+          "icao24": "76cd04",
+          "callsign": "SIA517",
+          "originCountry": "Singapore",
+          "timePosition": 1795025529,
+          "altitudeMeters": -23,
+          "velocityKmph": 5.5,
+          "headingDeg": 68,
+          "verticalRateMps": null,
+          "onGround": true,
+          "lat": 22.6393,
+          "lon": 88.4387,
+          "worldX": 9446,
+          "worldZ": -6034,
+          "distKmFromAirport": 1.9
+        },
+        {
+          "icao24": "70605d",
+          "callsign": "KAC283",
+          "originCountry": "Kuwait",
+          "timePosition": 1795025533,
+          "altitudeMeters": 10249,
+          "velocityKmph": 970.2,
+          "headingDeg": 93,
+          "verticalRateMps": -6.8,
           "onGround": false,
-          "lat": 22.5314,
-          "lon": 88.6683,
-          "worldX": 33045,
-          "worldZ": 5978,
-          "distKmFromAirport": 26.6
+          "lat": 22.9571,
+          "lon": 88.3588,
+          "worldX": 1233,
+          "worldZ": -41411,
+          "distKmFromAirport": 34.9
         }
       ],
       "unit": "aircraft",
       "category": "MEASURED",
       "source": "OpenSky Network (Ground ADS-B sensor receivers)",
-      "timestamp": "2026-11-16T17:54:18.000Z",
+      "timestamp": "2026-11-18T18:12:14.000Z",
       "status": "ok",
       "notes": "5 aircraft tracked within 50km terminal radar sector of Kolkata Airport (CCU/VECC)"
     }
@@ -213,6 +213,22 @@
         "stationName": "Howrah Junction (Howrah Terminal)",
         "totalPlatforms": 23,
         "activeServices": [
+          {
+            "trainNumber": "12834",
+            "trainName": "Howrah - Ahmedabad SF Express",
+            "trainType": "Superfast",
+            "destination": "Ahmedabad (ADI)",
+            "origin": "Howrah (HWH)",
+            "platform": "PF 23",
+            "type": "DEPARTURE",
+            "scheduledTime": "23:40",
+            "expectedTime": "23:40",
+            "delayMinutes": 0,
+            "status": "Boarding",
+            "category": "MODELLED",
+            "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
+            "timestamp": "2026-11-18T18:11:50.222Z"
+          },
           {
             "trainNumber": "12321",
             "trainName": "Howrah - Mumbai CSMT Mail (via Jabalpur)",
@@ -227,23 +243,23 @@
             "status": "Boarding",
             "category": "MODELLED",
             "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T17:53:57.180Z"
+            "timestamp": "2026-11-18T18:11:50.222Z"
           },
           {
-            "trainNumber": "12834",
-            "trainName": "Howrah - Ahmedabad SF Express",
-            "trainType": "Superfast",
-            "destination": "Ahmedabad (ADI)",
+            "trainNumber": "12839",
+            "trainName": "Howrah - MGR Chennai Central Mail",
+            "trainType": "Mail",
+            "destination": "Chennai Central (MAS)",
             "origin": "Howrah (HWH)",
-            "platform": "PF 23",
+            "platform": "PF 19",
             "type": "DEPARTURE",
-            "scheduledTime": "23:40",
-            "expectedTime": "23:40",
+            "scheduledTime": "23:55",
+            "expectedTime": "23:55",
             "delayMinutes": 0,
-            "status": "On Time",
+            "status": "Boarding",
             "category": "MODELLED",
             "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T17:53:57.180Z"
+            "timestamp": "2026-11-18T18:11:50.222Z"
           },
           {
             "trainNumber": "12840",
@@ -259,7 +275,7 @@
             "status": "Arrived",
             "category": "MODELLED",
             "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T17:53:57.180Z"
+            "timestamp": "2026-11-18T18:11:50.222Z"
           },
           {
             "trainNumber": "12863",
@@ -275,23 +291,7 @@
             "status": "Departed",
             "category": "MODELLED",
             "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T17:53:57.180Z"
-          },
-          {
-            "trainNumber": "12839",
-            "trainName": "Howrah - MGR Chennai Central Mail",
-            "trainType": "Mail",
-            "destination": "Chennai Central (MAS)",
-            "origin": "Howrah (HWH)",
-            "platform": "PF 19",
-            "type": "DEPARTURE",
-            "scheduledTime": "23:55",
-            "expectedTime": "23:55",
-            "delayMinutes": 0,
-            "status": "On Time",
-            "category": "MODELLED",
-            "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T17:53:57.180Z"
+            "timestamp": "2026-11-18T18:11:50.222Z"
           },
           {
             "trainNumber": "38801",
@@ -307,7 +307,7 @@
             "status": "Departed",
             "category": "MODELLED",
             "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T17:53:57.180Z"
+            "timestamp": "2026-11-18T18:11:50.222Z"
           },
           {
             "trainNumber": "37311",
@@ -323,7 +323,7 @@
             "status": "Departed",
             "category": "MODELLED",
             "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T17:53:57.180Z"
+            "timestamp": "2026-11-18T18:11:50.222Z"
           },
           {
             "trainNumber": "12311",
@@ -339,7 +339,7 @@
             "status": "Departed",
             "category": "MODELLED",
             "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T17:53:57.180Z"
+            "timestamp": "2026-11-18T18:11:50.222Z"
           },
           {
             "trainNumber": "38703",
@@ -355,7 +355,7 @@
             "status": "Departed",
             "category": "MODELLED",
             "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T17:53:57.180Z"
+            "timestamp": "2026-11-18T18:11:50.222Z"
           },
           {
             "trainNumber": "37815",
@@ -371,7 +371,7 @@
             "status": "Departed",
             "category": "MODELLED",
             "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T17:53:57.180Z"
+            "timestamp": "2026-11-18T18:11:50.222Z"
           },
           {
             "trainNumber": "38401",
@@ -387,7 +387,7 @@
             "status": "Departed",
             "category": "MODELLED",
             "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T17:53:57.180Z"
+            "timestamp": "2026-11-18T18:11:50.222Z"
           },
           {
             "trainNumber": "37813",
@@ -403,7 +403,7 @@
             "status": "Departed",
             "category": "MODELLED",
             "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T17:53:57.180Z"
+            "timestamp": "2026-11-18T18:11:50.222Z"
           },
           {
             "trainNumber": "37211",
@@ -419,7 +419,7 @@
             "status": "Departed",
             "category": "MODELLED",
             "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T17:53:57.180Z"
+            "timestamp": "2026-11-18T18:11:50.222Z"
           },
           {
             "trainNumber": "12810",
@@ -435,7 +435,7 @@
             "status": "Departed",
             "category": "MODELLED",
             "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T17:53:57.180Z"
+            "timestamp": "2026-11-18T18:11:50.222Z"
           },
           {
             "trainNumber": "13005",
@@ -451,7 +451,7 @@
             "status": "Departed",
             "category": "MODELLED",
             "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T17:53:57.180Z"
+            "timestamp": "2026-11-18T18:11:50.222Z"
           },
           {
             "trainNumber": "12809",
@@ -467,7 +467,7 @@
             "status": "On Time",
             "category": "MODELLED",
             "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T17:53:57.180Z"
+            "timestamp": "2026-11-18T18:11:50.222Z"
           },
           {
             "trainNumber": "22301",
@@ -483,23 +483,7 @@
             "status": "On Time",
             "category": "MODELLED",
             "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T17:53:57.180Z"
-          },
-          {
-            "trainNumber": "12301",
-            "trainName": "Howrah - New Delhi Rajdhani Express (via Gaya)",
-            "trainType": "Rajdhani",
-            "destination": "New Delhi (NDLS)",
-            "origin": "Howrah (HWH)",
-            "platform": "PF 9",
-            "type": "DEPARTURE",
-            "scheduledTime": "16:50",
-            "expectedTime": "16:50",
-            "delayMinutes": 0,
-            "status": "Departed",
-            "category": "MODELLED",
-            "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T17:53:57.180Z"
+            "timestamp": "2026-11-18T18:11:50.222Z"
           },
           {
             "trainNumber": "12019",
@@ -515,7 +499,7 @@
             "status": "On Time",
             "category": "MODELLED",
             "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T17:53:57.180Z"
+            "timestamp": "2026-11-18T18:11:50.222Z"
           },
           {
             "trainNumber": "22895",
@@ -531,7 +515,23 @@
             "status": "On Time",
             "category": "MODELLED",
             "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T17:53:57.180Z"
+            "timestamp": "2026-11-18T18:11:50.222Z"
+          },
+          {
+            "trainNumber": "12301",
+            "trainName": "Howrah - New Delhi Rajdhani Express (via Gaya)",
+            "trainType": "Rajdhani",
+            "destination": "New Delhi (NDLS)",
+            "origin": "Howrah (HWH)",
+            "platform": "PF 9",
+            "type": "DEPARTURE",
+            "scheduledTime": "16:50",
+            "expectedTime": "16:50",
+            "delayMinutes": 0,
+            "status": "Departed",
+            "category": "MODELLED",
+            "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
+            "timestamp": "2026-11-18T18:11:50.222Z"
           },
           {
             "trainNumber": "12857",
@@ -547,7 +547,7 @@
             "status": "On Time",
             "category": "MODELLED",
             "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T17:53:57.180Z"
+            "timestamp": "2026-11-18T18:11:50.222Z"
           },
           {
             "trainNumber": "12871",
@@ -563,7 +563,7 @@
             "status": "On Time",
             "category": "MODELLED",
             "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T17:53:57.180Z"
+            "timestamp": "2026-11-18T18:11:50.222Z"
           },
           {
             "trainNumber": "22303",
@@ -579,7 +579,7 @@
             "status": "Departed",
             "category": "MODELLED",
             "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T17:53:57.180Z"
+            "timestamp": "2026-11-18T18:11:50.222Z"
           },
           {
             "trainNumber": "12305",
@@ -595,7 +595,7 @@
             "status": "Departed",
             "category": "MODELLED",
             "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T17:53:57.180Z"
+            "timestamp": "2026-11-18T18:11:50.222Z"
           },
           {
             "trainNumber": "22302",
@@ -611,7 +611,7 @@
             "status": "Arrived",
             "category": "MODELLED",
             "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T17:53:57.180Z"
+            "timestamp": "2026-11-18T18:11:50.222Z"
           },
           {
             "trainNumber": "12302",
@@ -627,7 +627,7 @@
             "status": "On Time",
             "category": "MODELLED",
             "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T17:53:57.180Z"
+            "timestamp": "2026-11-18T18:11:50.222Z"
           },
           {
             "trainNumber": "22896",
@@ -643,38 +643,38 @@
             "status": "Arrived",
             "category": "MODELLED",
             "source": "Indian Railways Official Timetable (Howrah Division, Eastern & South Eastern Railway)",
-            "timestamp": "2026-11-16T17:53:57.180Z"
+            "timestamp": "2026-11-18T18:11:50.222Z"
           }
         ],
         "source": "Indian Railways Official Timetable (Howrah Division)",
         "category": "MODELLED",
-        "timestamp": "2026-11-16T17:53:57.180Z",
+        "timestamp": "2026-11-18T18:11:50.222Z",
         "status": "ok",
         "notes": "Synchronized to live IST clock. Displays authentic scheduled departures & arrivals across Platforms 1–23 (Eastern Railway & South Eastern Railway). Supply RAILWAY_API_KEY for live measured NTES feed."
       },
       "unit": "services",
       "category": "MODELLED",
       "source": "Indian Railways Timetable & Operational Platform Model (Howrah Terminal)",
-      "timestamp": "2026-11-16T17:53:57.180Z",
+      "timestamp": "2026-11-18T18:11:50.222Z",
       "status": "ok"
     }
   },
   "derived": {
     "hazeDensity": {
-      "value": 0.00052,
+      "value": 0.000321,
       "unit": "extinction coef (1/m)",
       "category": "ESTIMATED",
       "source": "Hänel hygroscopic aerosol swelling model [PM2.5 + RH]",
-      "timestamp": "2026-11-16T17:53:57.180Z",
+      "timestamp": "2026-11-18T18:11:50.222Z",
       "status": "ok",
-      "notes": "Extinction derived from live PM2.5 (244.9 µg/m³) and RH (80%)"
+      "notes": "Extinction derived from live PM2.5 (127.1 µg/m³) and RH (79%)"
     },
     "hazeMaxExtinction": {
-      "value": 0.99,
+      "value": 0.965,
       "unit": "opacity ratio",
       "category": "ESTIMATED",
       "source": "Atmospheric optical depth ceiling",
-      "timestamp": "2026-11-16T17:53:57.180Z",
+      "timestamp": "2026-11-18T18:11:50.222Z",
       "status": "ok"
     },
     "trafficSpeedFactor": {
@@ -682,7 +682,7 @@
       "unit": "multiplier",
       "category": "ESTIMATED",
       "source": "Default road network speed limits",
-      "timestamp": "2026-11-16T17:53:57.180Z",
+      "timestamp": "2026-11-18T18:11:50.222Z",
       "status": "ok",
       "notes": "No TomTom key; no invented speed ratio. Baseline road network limits apply."
     }
