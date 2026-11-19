@@ -386,7 +386,7 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
       }
       // Select arterial class roads (c === 0: Strand Rd, Brabourne Rd, MG Rd, Howrah loops) or wide thoroughfares (w >= 8.5)
       // This eliminates all narrow alleys and spaces between buildings so vehicles stay strictly on wide roadways
-      if ((totalLen >= 30 && (r.c === 0 || r.w >= 8.5)) || (r.c === 0 && totalLen >= 20)) {
+      if (totalLen >= 20 && r.w >= 4.5) {
         list.push({ idx, pts, cumDist, totalLen, w: r.w, c: r.c })
       }
     })
@@ -394,7 +394,8 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
   }, [data.roads])
 
   // Setup Fleet across COMPLETE CITY: Howrah Bridge + All City Roads (both Kolkata and Howrah sides)
-  const MAX_INSTANCES = 1000
+  const MAX_INSTANCES = 1500
+  const MAX_LIGHTS = 5000
   const vehicles = useMemo<VehicleAgent[]>(() => {
     const list: VehicleAgent[] = []
     
@@ -508,22 +509,25 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
       }
     })
 
-    // 2. Complete City Road Network Traffic (480 vehicles distributed across major OSM avenues)
+    // 2. Complete City Road Network Traffic across all OSM avenues & streets in Kolkata & Howrah
     if (cityRoadPaths.length > 0) {
-      // Priority weights: Major bridgehead highways (Brabourne Flyover 429, Strand Rd 431/650/818, Howrah Station 438/441/508/41) get dense continuous flow
       const BRIDGEHEAD_ROADS = new Set([429, 431, 650, 818, 438, 439, 441, 508, 41, 221, 2, 751, 752, 33, 34, 20, 430, 436, 442])
-      const weights = cityRoadPaths.map((p) => {
-        const isBridgehead = BRIDGEHEAD_ROADS.has(p.idx)
-        return p.totalLen * (isBridgehead ? 15.0 : (p.c === 0 ? 3.5 : 1.2))
-      })
-      const totalWeight = weights.reduce((a, b) => a + b, 0)
-      const targetCityCount = 480
 
       for (let pi = 0; pi < cityRoadPaths.length; pi++) {
         const path = cityRoadPaths[pi]
         const isBridgehead = BRIDGEHEAD_ROADS.has(path.idx)
-        const maxOnPath = isBridgehead ? 26 : 10
-        const numOnThisPath = Math.min(maxOnPath, Math.round((weights[pi] / totalWeight) * targetCityCount))
+        const isArterial = path.c === 0 || path.w >= 10.0
+
+        let numOnThisPath = 0
+        if (isBridgehead) {
+          numOnThisPath = Math.min(14, Math.max(3, Math.floor(path.totalLen / 28)))
+        } else if (isArterial) {
+          numOnThisPath = Math.min(7, Math.max(2, Math.floor(path.totalLen / 45)))
+        } else if (path.totalLen >= 60) {
+          numOnThisPath = Math.min(3, Math.max(2, Math.floor(path.totalLen / 60)))
+        } else if (path.totalLen >= 25) {
+          numOnThisPath = 1
+        }
         if (numOnThisPath === 0) continue
 
         for (let k = 0; k < numOnThisPath; k++) {
@@ -538,34 +542,34 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
           const isWide = path.w >= 8.5
           let lateralRatio: number
 
-          if (r < 0.08) {
+          if (r < 0.06) {
             kind = 'cart'
-            speed = 2.0 + (r * 0.5)
+            speed = 2.2 + (r * 0.5)
             len = 3.6; wid = 1.4; hei = 1.2
             lateralRatio = isWide ? 0.30 : 0.20
-          } else if (r < 0.20) {
+          } else if (r < 0.18) {
             kind = 'truck'
-            speed = 7.0 + (r * 2.0)
+            speed = 7.5 + (r * 2.0)
             len = 8.2; wid = 2.4; hei = 2.8
             lateralRatio = isWide ? 0.26 : 0.20
-          } else if (r < 0.36) {
+          } else if (r < 0.35) {
             kind = 'bus'
-            speed = 8.0 + (r * 2.5)
+            speed = 8.5 + (r * 2.5)
             len = 9.6; wid = 2.45; hei = 3.1
             lateralRatio = isWide ? 0.24 : 0.18
           } else if (r < 0.52) {
             kind = 'auto'
-            speed = 9.0 + (r * 2.5)
+            speed = 9.5 + (r * 2.5)
             len = 2.8; wid = 1.35; hei = 1.7
             lateralRatio = isWide ? 0.20 : 0.18
           } else if (r < 0.70) {
             kind = 'bike'
-            speed = 10.5 + (r * 3.0)
+            speed = 11.0 + (r * 3.0)
             len = 2.0; wid = 0.6; hei = 1.5
             lateralRatio = isWide ? 0.14 : 0.16
           } else {
             kind = 'taxi'
-            speed = 11.0 + (r * 3.0)
+            speed = 11.5 + (r * 3.0)
             len = 4.4; wid = 1.72; hei = 1.5
             lateralRatio = isWide ? 0.16 : 0.18
           }
@@ -573,8 +577,8 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
           // Spread initial s evenly along the road segment
           const s = ((k + 0.5) / numOnThisPath) * path.totalLen
           // Ensure lateral offset keeps vehicle strictly on the asphalt carriageway away from curbs and building walls
-          const maxSafeOffset = Math.max(0.8, path.w * 0.5 - (wid * 0.5 + 0.8))
-          const laneOffset = Math.min(maxSafeOffset, path.w * lateralRatio)
+          const maxSafeOffset = Math.max(0.6, path.w * 0.5 - (wid * 0.5 + 0.6))
+          const laneOffset = Math.min(maxSafeOffset, Math.max(0.6, path.w * lateralRatio))
 
           list.push({
             kind,
@@ -594,7 +598,6 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
         }
       }
     }
-
     return list
   }, [cityRoadPaths])
 
@@ -772,12 +775,12 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
       pedMesh.current.instanceMatrix.needsUpdate = true
     }
     if (headLightMesh.current) {
-      for (let i = 0; i < MAX_INSTANCES * 2; i++) headLightMesh.current.setMatrixAt(i, offscreen)
+      for (let i = 0; i < MAX_LIGHTS; i++) headLightMesh.current.setMatrixAt(i, offscreen)
       headLightMesh.current.count = 0
       headLightMesh.current.instanceMatrix.needsUpdate = true
     }
     if (tailLightMesh.current) {
-      for (let i = 0; i < MAX_INSTANCES * 2; i++) tailLightMesh.current.setMatrixAt(i, offscreen)
+      for (let i = 0; i < MAX_LIGHTS; i++) tailLightMesh.current.setMatrixAt(i, offscreen)
       tailLightMesh.current.count = 0
       tailLightMesh.current.instanceMatrix.needsUpdate = true
     }
@@ -860,30 +863,28 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
         // High-density feeder roads moderate speed to 7-9 m/s for authentic urban flow
         effectiveTargetSpeed = Math.min(effectiveTargetSpeed, 8.5)
       }
-      const minSafeGap = 3.0 // minimum standing gap (meters)
-      const timeHeadway = 1.2 // safe time headway (seconds)
+      const minSafeGap = 2.5 // minimum standing gap (meters)
+      const timeHeadway = 1.0 // safe time headway (seconds)
       const desiredGap = minSafeGap + Math.max(0, v.speed) * timeHeadway
 
-      if (leadAgent && minClearance < 1.5) {
-        // HARD ANTI-COLLISION CLAMPING: Vehicles must never penetrate!
-        v.speed = 0
-        if (minClearance < 1.0) {
-          const reqDist = v.length * 0.5 + leadAgent.length * 0.5 + 1.8
-          v.s = leadAgent.s - v.dir * reqDist
-          if (v.isBridge) {
-            if (v.s > BRIDGE_S_MAX) v.s -= span
-            if (v.s < BRIDGE_S_MIN) v.s += span
-          } else if (v.path) {
-            if (v.s < 0) v.s += span
-            if (v.s > span) v.s -= span
-          }
+      if (leadAgent && minClearance < 1.2) {
+        // Anti-collision separation
+        v.speed = Math.max(0.5, leadSpeed * 0.5)
+        const reqDist = v.length * 0.5 + leadAgent.length * 0.5 + 1.2
+        v.s = leadAgent.s - v.dir * reqDist
+        if (v.isBridge) {
+          if (v.s > BRIDGE_S_MAX) v.s -= span
+          if (v.s < BRIDGE_S_MIN) v.s += span
+        } else if (v.path) {
+          if (v.s < 0) v.s += span
+          if (v.s > span) v.s -= span
         }
       } else if (leadAgent && minClearance < desiredGap) {
-        // Smooth deceleration
-        const gapRatio = Math.max(0, (minClearance - minSafeGap) / (desiredGap - minSafeGap + 0.001))
-        const targetV = Math.min(leadSpeed * gapRatio, effectiveTargetSpeed)
-        const decelRate = minClearance < 4.0 ? 8.0 : 4.0
-        v.speed = THREE.MathUtils.lerp(v.speed, Math.max(0, targetV), dt * decelRate)
+        // Safe approach without cyclic deadlocking
+        const headwayBuffer = Math.max(0, minClearance - minSafeGap)
+        const safeApproachSpeed = Math.sqrt(2 * 2.8 * headwayBuffer)
+        const targetV = Math.min(effectiveTargetSpeed, Math.max(leadSpeed, safeApproachSpeed))
+        v.speed = THREE.MathUtils.lerp(v.speed, Math.max(0.5, targetV), dt * 3.5)
       } else {
         // Free-flow acceleration
         v.speed = THREE.MathUtils.lerp(v.speed, effectiveTargetSpeed, dt * 1.8)
@@ -1003,7 +1004,7 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
       }
 
       // Headlights & Taillights for motorized vehicles
-      if (v.kind !== 'cart' && lightIdx < MAX_INSTANCES * 2 - 2) {
+      if (v.kind !== 'cart' && lightIdx < MAX_LIGHTS - 2) {
         const halfL = v.length * 0.48
         const halfW = v.kind === 'bus' || v.kind === 'truck' ? 1.05 : (v.kind === 'bike' ? 0.0 : 0.7)
         const hY = v.kind === 'bus' || v.kind === 'truck' ? 0.75 : 0.52
@@ -1182,8 +1183,8 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
       <instancedMesh ref={pedMesh} args={[pedGeo, pedMat, TOTAL_PEDS]} castShadow />
 
       {/* Vehicle Lights */}
-      <instancedMesh ref={headLightMesh} args={[lightGeo, headLightMat, MAX_INSTANCES * 2]} />
-      <instancedMesh ref={tailLightMesh} args={[lightGeo, tailLightMat, MAX_INSTANCES * 2]} />
+      <instancedMesh ref={headLightMesh} args={[lightGeo, headLightMat, MAX_LIGHTS]} />
+      <instancedMesh ref={tailLightMesh} args={[lightGeo, tailLightMat, MAX_LIGHTS]} />
 
       {/* Hooghly River Passenger Ferries */}
       <group ref={ferryGroup}>
