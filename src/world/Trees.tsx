@@ -101,7 +101,13 @@ export function Trees({ data }: { data: SceneData }) {
       const wz = z - cz
       const bridgeS = wx * dx + wz * dz
       const bridgeL = -wx * dz + wz * dx
-      if (bridgeS >= 440 && bridgeS <= 568 && Math.abs(bridgeL) <= 22) {
+      if (Math.abs(bridgeS) <= 360 && Math.abs(bridgeL) <= 18) {
+        m.makeTranslation(0, -9999, 0)
+        canopy.current.setMatrixAt(i, m)
+        trunk.current.setMatrixAt(i, m)
+        continue
+      }
+      if (bridgeS >= 360 && bridgeS <= 568 && Math.abs(bridgeL) <= 22) {
         m.makeTranslation(0, -9999, 0)
         canopy.current.setMatrixAt(i, m)
         trunk.current.setMatrixAt(i, m)

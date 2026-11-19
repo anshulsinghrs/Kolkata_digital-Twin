@@ -230,18 +230,6 @@ function buildBridge() {
     }
   }
 
-  // Smooth junction connection tongues that merge the bridge road directly into OSM highways:
-  // 1. Kolkata Bank: fan into Brabourne Flyover (Road 429) & Strand Road (Road 2/431)
-  const jY = 0.14
-  matte.bar([326, jY - 0.28, 0], [342, jY - 0.28, 16], 0.56, B.roadHalf * 2 + 10.0, ASPHALT)
-  matte.bar([338, jY + 0.08, 10.4], [348, jY + 0.08, 28.0], 0.3, 0.4, CONCRETE)
-  matte.bar([338, jY + 0.08, -10.4], [348, jY + 0.08, -14.0], 0.3, 0.4, CONCRETE)
-
-  // 2. Howrah Bank: fan into Howrah Station Interchange (Road 438/439/508)
-  matte.bar([-342, jY - 0.28, -8], [-326, jY - 0.28, 0], 0.56, B.roadHalf * 2 + 10.0, ASPHALT)
-  matte.bar([-348, jY + 0.08, -18.0], [-338, jY + 0.08, -10.4], 0.3, 0.4, CONCRETE)
-  matte.bar([-348, jY + 0.08, 14.0], [-338, jY + 0.08, 10.4], 0.3, 0.4, CONCRETE)
-
   // Street lamps on the deck
   const LAMP_POST = lin('#4a4d4c')
   for (let s = -END; s <= END; s += 30.48) {
@@ -254,16 +242,24 @@ function buildBridge() {
     }
   }
 
-  // main piers (monoliths at the banks) and anchorages
+  // Main river piers (monoliths at the banks) and anchorages
   for (const sg of [-1, 1]) {
     const s = sg * B.halfMain
     matte.box(s, (WATER_Y - 6 + DECK_Y - 2) / 2, 0, 30, DECK_Y - 2 - (WATER_Y - 6), 58, CONCRETE)
     matte.box(s, DECK_Y - 2.6, 0, 33, 1.2, 61, shade(CONCRETE, 1.08))
     matte.box(s, WATER_Y + 0.4, 0, 36, 2.2, 64, shade(STONE, 0.9))
     for (const z of [-B.zT, B.zT]) matte.box(s, DECK_Y - 1.4, z, 7, 1.6, 6.5, shade(CONCRETE, 0.9))
+
+    // Anchor Arm Monoliths: two separate massive structures FLANKING the roadway outside the traffic lanes.
+    // The central carriageway (|z| <= 10.4m) remains 100% open and unobstructed into the city roads.
     const e = sg * END
-    matte.box(e + sg * 2, DECK_Y / 2 - 0.6, 0, 22, DECK_Y - 0.4, 46, STONE)
-    for (const z of [-B.zT, B.zT]) matte.box(e, DECK_Y + 4, z, 6, 8.5, 5, shade(CONCRETE, 0.95))
+    for (const sgZ of [-1, 1]) {
+      const zAnchor = sgZ * (B.zT + 2.4) // ±14.0m, outside the roadway
+      // Anchor foundation block
+      matte.box(e + sg * 1.5, (WATER_Y - 2 + deckY(e) - 0.2) / 2, zAnchor, 18, deckY(e) - WATER_Y + 2.2, 7.5, STONE)
+      // Flanking portal pylon framing the entrance
+      matte.box(e, deckY(e) + 3.0, zAnchor, 5.0, 6.2, 4.2, shade(CONCRETE, 0.95))
+    }
   }
 
   return { steel: steel.build(), matte: matte.build(), lamps: lamps.build() }
