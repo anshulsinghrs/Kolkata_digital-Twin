@@ -91,8 +91,23 @@ export function Trees({ data }: { data: SceneData }) {
     const q = new THREE.Quaternion()
     const up = new THREE.Vector3(0, 1, 0)
     const c = new THREE.Color()
+    const { cx, cz, dx, dz } = data.bridge
+
     for (let i = 0; i < count; i++) {
       const x = data.trees[i * 4], z = data.trees[i * 4 + 1], s = data.trees[i * 4 + 2], h = data.trees[i * 4 + 3]
+      
+      // Remove trees that fall on the bridge road, approach ramp, and main road connector corridor
+      const wx = x - cx
+      const wz = z - cz
+      const bridgeS = wx * dx + wz * dz
+      const bridgeL = -wx * dz + wz * dx
+      if (bridgeS >= 440 && bridgeS <= 568 && Math.abs(bridgeL) <= 22) {
+        m.makeTranslation(0, -9999, 0)
+        canopy.current.setMatrixAt(i, m)
+        trunk.current.setMatrixAt(i, m)
+        continue
+      }
+
       q.setFromAxisAngle(up, h * Math.PI * 2)
       const wide = s * (0.95 + ((h * 7) % 1) * 0.4)
       m.compose(new THREE.Vector3(x, 0, z), q, new THREE.Vector3(wide, s, wide))

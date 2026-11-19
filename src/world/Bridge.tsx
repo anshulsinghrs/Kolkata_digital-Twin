@@ -24,12 +24,17 @@ export const BRIDGE = {
 }
 const B = BRIDGE
 const END = B.halfMain + B.anchor
+export const RAMP_END = END + B.ramp // 517.6 m
+export const KOLKATA_CONNECT_END = 556.0 // 556.0 m: seamlessly connects into Road 221 (Strand / MG Road)
 
 export const deckY = (s: number) => {
   const a = Math.abs(s)
   if (a <= END) return DECK_Y + 2.6 * (1 - (a / END) ** 2)
-  const t = Math.min(1, (a - END) / B.ramp)
-  return DECK_Y * (1 - t * t * (3 - 2 * t))
+  if (a <= RAMP_END) {
+    const t = Math.min(1, (a - END) / B.ramp)
+    return Math.max(0.14, DECK_Y * (1 - t * t * (3 - 2 * t)))
+  }
+  return 0.14 // ground-level city road height matching Ground.tsx
 }
 const lowerY = (s: number) => {
   const a = Math.abs(s)
@@ -159,43 +164,58 @@ function buildBridge() {
   }
 
   // deck: roadway between the trusses, footpaths cantilevered outside them
+  // Extends on Kolkata (+s) side all the way to KOLKATA_CONNECT_END (556m) to seamlessly plug into Road 221
   const walkIn = B.zT + 1.0
   const walkOut = walkIn + B.walk
   const STEP = B.panel / 2
-  const rampEnd = END + B.ramp
-  for (let s = -rampEnd; s < rampEnd - 0.01; s += STEP) {
-    const s2 = Math.min(s + STEP, rampEnd)
+  const sStart = -RAMP_END
+  const sEnd = KOLKATA_CONNECT_END
+
+  for (let s = sStart; s < sEnd - 0.01; s += STEP) {
+    const s2 = Math.min(s + STEP, sEnd)
     const y = deckY(s)
     const y2 = deckY(s2)
     const onBridge = Math.abs(s + STEP / 2) < END
+    const onRamp = !onBridge && s < RAMP_END
+    const onConnector = s >= RAMP_END
+
+    // Main carriageway: asphalt road bed
     matte.bar([s, y - 0.3, 0], [s2, y2 - 0.3, 0], 0.6, B.roadHalf * 2 + 2.4, ASPHALT)
+
     for (const sg of [-1, 1]) {
       const zc = (sg * (walkIn + walkOut)) / 2
+      // Footpaths / sidewalks
       matte.bar([s, y - 0.12, zc], [s2, y2 - 0.12, zc], 0.5, B.walk, WALK)
-      // kerb between road and truss line
+      // Kerb between road and footpath
       matte.bar([s, y + 0.1, sg * (B.roadHalf + 0.2)], [s2, y2 + 0.1, sg * (B.roadHalf + 0.2)], 0.35, 0.4, CONCRETE)
-      // outer railing: two rails plus posts
-      for (const h of [0.55, 1.15]) steel.bar([s, y + h, sg * walkOut], [s2, y2 + h, sg * walkOut], 0.08, 0.08, STEEL)
-      for (let q = 0; q < 3; q++) {
-        const sp = s + (q / 3) * STEP
-        steel.bar([sp, deckY(sp), sg * walkOut], [sp, deckY(sp) + 1.2, sg * walkOut], 0.1, 0.1, STEEL)
+
+      // Outer railing: only on the elevated bridge structure and elevated ramp
+      if (s < RAMP_END - 5) {
+        for (const h of [0.55, 1.15]) steel.bar([s, y + h, sg * walkOut], [s2, y2 + h, sg * walkOut], 0.08, 0.08, STEEL)
+        for (let q = 0; q < 3; q++) {
+          const sp = s + (q / 3) * STEP
+          steel.bar([sp, deckY(sp), sg * walkOut], [sp, deckY(sp) + 1.2, sg * walkOut], 0.1, 0.1, STEEL)
+        }
       }
+
       if (onBridge) {
         // stringers under the deck edges
         steel.bar([s, y - 1.5, sg * B.zT], [s2, y2 - 1.5, sg * B.zT], 2.0, 0.7, shade(STEEL, 0.8))
         steel.bar([s, y - 1.1, sg * 4], [s2, y2 - 1.1, sg * 4], 1.1, 0.4, shade(STEEL, 0.75))
       }
     }
+
     // dashed centre line and lane lines
     const mid = (s + s2) / 2
     for (const zl of [-3.5, 0, 3.5, -7, 7]) {
       matte.bar([mid - 1.6, deckY(mid - 1.6) + 0.012, zl], [mid + 1.6, deckY(mid + 1.6) + 0.012, zl], 0.02, 0.14, lin('#b9b3a4'))
     }
     if (onBridge) matte.bar([s, y + 0.006, -B.roadHalf], [s, y + 0.006, B.roadHalf], 0.012, 0.07, lin('#2f2d2b'))
+
     if (onBridge) {
       // floor beams
       steel.bar([s, y - 1.4, -walkOut], [s, y - 1.4, walkOut], 1.5, 0.5, shade(STEEL, 0.78))
-    } else {
+    } else if (onRamp) {
       // approach ramp: retaining walls down to the ground
       const w = walkOut
       for (const sg of [-1, 1]) {
@@ -209,7 +229,21 @@ function buildBridge() {
     }
   }
 
-  // street lamps on the deck
+  // Smooth junction corner returns where connector merges into Road 221
+  const juncY = 0.14
+  matte.bar([552, juncY - 0.28, 0], [558, juncY - 0.28, 0], 0.56, B.roadHalf * 2 + 6.0, ASPHALT)
+  for (const sg of [-1, 1]) {
+    // Curved curb fillets into Road 221
+    matte.bar(
+      [551, juncY + 0.08, sg * (B.roadHalf + 0.2)],
+      [557, juncY + 0.08, sg * (B.roadHalf + 3.2)],
+      0.3,
+      0.4,
+      CONCRETE
+    )
+  }
+
+  // Street lamps on the deck
   const LAMP_POST = lin('#4a4d4c')
   for (let s = -END - 150; s <= END + 150; s += 30.48) {
     for (const sg of [-1, 1]) {
@@ -219,6 +253,15 @@ function buildBridge() {
       steel.bar([s, y + 8.5, z], [s, y + 9.1, z - sg * 2.4], 0.14, 0.14, LAMP_POST)
       lamps.box(s, y + 9.0, z - sg * 2.5, 0.9, 0.22, 0.45, [1, 1, 1])
     }
+  }
+  // Pair of street lamps on the ground-level connector road
+  for (const sg of [-1, 1]) {
+    const s = 538
+    const z = sg * (walkIn + 0.5)
+    const y = deckY(s)
+    steel.bar([s, y, z], [s, y + 8.5, z], 0.2, 0.2, LAMP_POST)
+    steel.bar([s, y + 8.5, z], [s, y + 9.1, z - sg * 2.4], 0.14, 0.14, LAMP_POST)
+    lamps.box(s, y + 9.0, z - sg * 2.5, 0.9, 0.22, 0.45, [1, 1, 1])
   }
 
   // main piers (monoliths at the banks) and anchorages

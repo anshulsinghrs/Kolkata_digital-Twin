@@ -5,10 +5,14 @@ import { useGLTF } from '@react-three/drei'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import type { SceneData } from './types'
 import { toPts } from './types'
-import { BRIDGE, deckY } from './Bridge'
+import { BRIDGE, deckY, RAMP_END, KOLKATA_CONNECT_END } from './Bridge'
 import { WATER_Y } from './constants'
 
-const TOTAL_HALF_SPAN = BRIDGE.halfMain + BRIDGE.anchor + BRIDGE.ramp // ~377.7 m (Total bridge span ~755 m)
+// Bridge bounds: Howrah west approach (-RAMP_END = -517.6m) to Kolkata main road connection (KOLKATA_CONNECT_END = 556.0m)
+const BRIDGE_S_MIN = -RAMP_END
+const BRIDGE_S_MAX = KOLKATA_CONNECT_END
+const BRIDGE_TOTAL_SPAN = BRIDGE_S_MAX - BRIDGE_S_MIN // 1073.6 m total continuous corridor
+const TOTAL_HALF_SPAN = RAMP_END
 
 // Indian Left-Hand Drive Traffic Lane Layout on Howrah Bridge
 // Roadway width is 21.6m (-10.8m to +10.8m)
@@ -471,7 +475,7 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
     ]
 
     const VEHICLES_PER_LANE = 9
-    const span = TOTAL_HALF_SPAN * 2
+    const span = BRIDGE_TOTAL_SPAN
 
     bridgeLanesConfig.forEach((cfg, laneIdx) => {
       const pool: any[] = []
@@ -483,7 +487,7 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
         const spec = pool[(k + laneIdx * 3) % pool.length]
         // Stagger initial s coordinate evenly along the bridge span with lane phase shift
         const phase = (k + ((laneIdx * 0.28) % 1)) / VEHICLES_PER_LANE
-        const s = -TOTAL_HALF_SPAN + phase * span
+        const s = BRIDGE_S_MIN + phase * span
         const baseSpeed = spec.speed * (0.92 + ((k * 0.17) % 0.16))
 
         list.push({
@@ -781,7 +785,7 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
     // 1. Multi-Agent Simulation: Car-Following, Collision Avoidance, IDM
     for (let i = 0; i < vehicles.length; i++) {
       const v = vehicles[i]
-      const span = v.isBridge ? (TOTAL_HALF_SPAN * 2) : (v.path?.totalLen || 1000)
+      const span = v.isBridge ? BRIDGE_TOTAL_SPAN : (v.path?.totalLen || 1000)
 
       let minClearance = Infinity
       let leadSpeed = v.targetSpeed
@@ -846,8 +850,8 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
           const reqDist = v.length * 0.5 + leadAgent.length * 0.5 + 1.8
           v.s = leadAgent.s - v.dir * reqDist
           if (v.isBridge) {
-            if (v.s > TOTAL_HALF_SPAN) v.s -= span
-            if (v.s < -TOTAL_HALF_SPAN) v.s += span
+            if (v.s > BRIDGE_S_MAX) v.s -= span
+            if (v.s < BRIDGE_S_MIN) v.s += span
           } else if (v.path) {
             if (v.s < 0) v.s += span
             if (v.s > span) v.s -= span
@@ -869,8 +873,8 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
 
       // Wrap around road boundaries
       if (v.isBridge) {
-        if (v.dir > 0 && v.s > TOTAL_HALF_SPAN) v.s -= span
-        if (v.dir < 0 && v.s < -TOTAL_HALF_SPAN) v.s += span
+        if (v.dir > 0 && v.s > BRIDGE_S_MAX) v.s -= span
+        if (v.dir < 0 && v.s < BRIDGE_S_MIN) v.s += span
       } else if (v.path) {
         if (v.dir > 0 && v.s > v.path.totalLen) v.s -= span
         if (v.dir < 0 && v.s < 0) v.s += span
