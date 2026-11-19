@@ -5,14 +5,14 @@ import { useGLTF } from '@react-three/drei'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import type { SceneData } from './types'
 import { toPts } from './types'
-import { BRIDGE, deckY, RAMP_END } from './Bridge'
+import { BRIDGE, deckY, RAMP_END, roadCenterZ } from './Bridge'
 import { WATER_Y } from './constants'
 
-// Bridge bounds: spans the real Howrah Bridge from Howrah riverbank (-336m) to Kolkata riverbank (+336m)
-const BRIDGE_S_MIN = -RAMP_END // -336.0 m
-const BRIDGE_S_MAX = RAMP_END  // +336.0 m
-const BRIDGE_TOTAL_SPAN = BRIDGE_S_MAX - BRIDGE_S_MIN // 672.0 m total span over Hooghly river
-const TOTAL_HALF_SPAN = RAMP_END
+// Bridge bounds: spans Howrah riverbank (-336m) to Kolkata Road 2 junction (+352m)
+const BRIDGE_S_MIN = -336.0
+const BRIDGE_S_MAX = 352.0
+const BRIDGE_TOTAL_SPAN = BRIDGE_S_MAX - BRIDGE_S_MIN // 688.0 m total span
+const TOTAL_HALF_SPAN = 340.0
 
 // Indian Left-Hand Drive Traffic Lane Layout on Howrah Bridge
 // Roadway width is 21.6m (-10.8m to +10.8m)
@@ -915,20 +915,39 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
       const v = vehicles[i]
 
       if (v.isBridge) {
-        // Howrah Bridge Local Coordinates
+        // Howrah Bridge Local Coordinates with curved Kolkata approach merging smoothly into Road 2 & Brabourne Flyover
         const localS = v.s
         const localY = deckY(localS)
-        const localLane = v.laneOffset
+        const localZCenter = roadCenterZ(localS)
 
-        // Road inclination slope along the bridge
-        const ds = 1.0
-        const slopeAngle = Math.atan2(deckY(localS + v.dir * ds) - localY, ds)
+        // Compute tangent and normal along the road curve
+        const ds = 0.5
+        const z1 = roadCenterZ(localS - ds)
+        const z2 = roadCenterZ(localS + ds)
+        const dz = z2 - z1
+        const segLen = Math.hypot(2 * ds, dz) || 1
+        const tx = (2 * ds) / segLen
+        const tz = dz / segLen
 
-        dummy.position.set(localS, localY, localLane)
-        // Vehicle models have forward pointing along -Z.
-        // To face East (+X): -PI/2. To face West (-X): +PI/2
-        dummy.rotation.set(0, v.dir > 0 ? -Math.PI * 0.5 : Math.PI * 0.5, 0)
-        if (slopeAngle !== 0) dummy.rotateX(v.dir > 0 ? -slopeAngle : slopeAngle)
+        const nx = -tz
+        const nz = tx
+
+        // Vehicle position with lane offset along curve normal
+        const vx = localS + nx * v.laneOffset
+        const vy = localY + 0.20
+        const vz = localZCenter + nz * v.laneOffset
+
+        // Road inclination slope along travel direction
+        const nextY = deckY(localS + v.dir * 1.0)
+        const slopeAngle = Math.atan2(nextY - localY, 1.0)
+
+        dummy.position.set(vx, vy, vz)
+
+        // Forward heading: vector is (tx * v.dir, tz * v.dir).
+        // Model faces -Z, so rotation around Y is Math.atan2(-tx * v.dir, -tz * v.dir)
+        const heading = Math.atan2(-tx * v.dir, -tz * v.dir)
+        dummy.rotation.set(0, heading, 0)
+        if (slopeAngle !== 0) dummy.rotateX(-slopeAngle)
         dummy.updateMatrix()
 
         // Multiply by Bridge world transform

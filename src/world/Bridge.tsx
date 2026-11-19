@@ -24,21 +24,44 @@ export const BRIDGE = {
 }
 const B = BRIDGE
 const END = B.halfMain + B.anchor // 327.6 m (Anchor arm monoliths on the river banks)
-export const RAMP_END = 336.0 // 336.0 m: bridge deck lands directly at anchor monoliths on the riverbanks
-export const KOLKATA_CONNECT_END = 336.0
+export const RAMP_END = 352.0 // 352.0 m: bridge deck curves and merges directly into Road 2 & Brabourne Flyover
+export const KOLKATA_CONNECT_END = 352.0
+
+/** Centerline lateral position (Z in bridge frame, positive = South) */
+export function roadCenterZ(s: number): number {
+  if (s <= 275) return 0
+  if (s <= 302.4) {
+    const t = (s - 275) / (302.4 - 275)
+    return 5.4 * (t * t * (3 - 2 * t))
+  }
+  if (s <= 322.2) {
+    const t = (s - 302.4) / (322.2 - 302.4)
+    return 5.4 + (33.4 - 5.4) * (t * t * (3 - 2 * t))
+  }
+  if (s <= 337.2) {
+    const t = (s - 322.2) / (337.2 - 322.2)
+    return 33.4 + (58.2 - 33.4) * (t * t * (3 - 2 * t))
+  }
+  if (s <= 352.0) {
+    const t = (s - 337.2) / (352.0 - 337.2)
+    return 58.2 + (88.0 - 58.2) * (t * t * (3 - 2 * t))
+  }
+  return 88.0
+}
 
 export const deckY = (s: number) => {
-  const a = Math.abs(s)
-  if (a <= B.halfMain) {
+  if (s >= -B.halfMain && s <= B.halfMain) {
     // Parabolic camber across the river (mid-river 11.4m, river towers 8.8m)
-    return DECK_Y + 2.6 * (1 - (a / B.halfMain) ** 2)
+    return DECK_Y + 2.6 * (1 - (s / B.halfMain) ** 2)
   }
-  if (a <= RAMP_END) {
-    // Smooth ramp descending from river tower (8.8m) down to ground level (0.14m) at the anchor pier
-    const t = Math.min(1, (a - B.halfMain) / (RAMP_END - B.halfMain))
+  if (s > B.halfMain) {
+    // Kolkata approach ramp descending from river tower (8.8m) down to ground level (0.14m)
+    const t = Math.min(1, Math.max(0, (s - B.halfMain) / (340.0 - B.halfMain)))
     return THREE.MathUtils.lerp(DECK_Y, 0.14, t * t * (3 - 2 * t))
   }
-  return 0.14 // ground-level road height matching Ground.tsx
+  // Howrah approach ramp
+  const t = Math.min(1, Math.max(0, (-s - B.halfMain) / (336.0 - B.halfMain)))
+  return THREE.MathUtils.lerp(DECK_Y, 0.14, t * t * (3 - 2 * t))
 }
 const lowerY = (s: number) => {
   const a = Math.abs(s)
@@ -167,66 +190,117 @@ function buildBridge() {
     }
   }
 
-  // deck: roadway between the trusses, footpaths cantilevered outside them
-  // Span matches the real Howrah Bridge from Howrah riverbank (-336m) to Kolkata riverbank (+336m)
+  // Roadway and footpaths:
+  // Continuous carriageway from Howrah bank (-336m) to Kolkata bank (+352m),
+  // smoothly curving into Road 2 & Brabourne Flyover on the Kolkata bank!
   const walkIn = B.zT + 1.0
   const walkOut = walkIn + B.walk
-  const STEP = B.panel / 2
-  const sStart = -RAMP_END
-  const sEnd = RAMP_END
+  const sStart = -336.0
+  const sEnd = 352.0
+  const STEP = 4.0 // 4m steps for smooth curve geometry
 
   for (let s = sStart; s < sEnd - 0.01; s += STEP) {
     const s2 = Math.min(s + STEP, sEnd)
-    const y = deckY(s)
+    const y1 = deckY(s)
     const y2 = deckY(s2)
-    const onBridge = Math.abs(s + STEP / 2) < END
-    const onRamp = !onBridge && Math.abs(s) < RAMP_END
+    const z1 = roadCenterZ(s)
+    const z2 = roadCenterZ(s2)
 
-    // Main carriageway: asphalt road bed
-    matte.bar([s, y - 0.3, 0], [s2, y2 - 0.3, 0], 0.6, B.roadHalf * 2 + 2.4, ASPHALT)
+    const onBridge = s >= -END && s2 <= END
+    const roadW = onBridge ? B.roadHalf + 1.2 : 12.0
+    const walkW = onBridge ? B.walk : 3.5
 
-    for (const sg of [-1, 1]) {
-      const zc = (sg * (walkIn + walkOut)) / 2
-      // Footpaths / sidewalks
-      matte.bar([s, y - 0.12, zc], [s2, y2 - 0.12, zc], 0.5, B.walk, WALK)
-      // Kerb between road and footpath
-      matte.bar([s, y + 0.1, sg * (B.roadHalf + 0.2)], [s2, y2 + 0.1, sg * (B.roadHalf + 0.2)], 0.35, 0.4, CONCRETE)
+    // Clean, unskewed cross-section vertices at s and s2
+    // Road asphalt surface corners
+    const rL1: V3 = [s, y1, z1 - roadW]
+    const rR1: V3 = [s, y1, z1 + roadW]
+    const rL2: V3 = [s2, y2, z2 - roadW]
+    const rR2: V3 = [s2, y2, z2 + roadW]
 
-      // Outer railing along the cantilever span and ramps
-      for (const h of [0.55, 1.15]) steel.bar([s, y + h, sg * walkOut], [s2, y2 + h, sg * walkOut], 0.08, 0.08, STEEL)
-      for (let q = 0; q < 3; q++) {
-        const sp = s + (q / 3) * STEP
-        steel.bar([sp, deckY(sp), sg * walkOut], [sp, deckY(sp) + 1.2, sg * walkOut], 0.1, 0.1, STEEL)
-      }
+    matte.quad(rL1, rR1, rR2, rL2, ASPHALT)
 
-      if (onBridge) {
-        // stringers under the deck edges
-        steel.bar([s, y - 1.5, sg * B.zT], [s2, y2 - 1.5, sg * B.zT], 2.0, 0.7, shade(STEEL, 0.8))
-        steel.bar([s, y - 1.1, sg * 4], [s2, y2 - 1.1, sg * 4], 1.1, 0.4, shade(STEEL, 0.75))
-      }
+    // Sidewalks flanking the carriageway
+    const wL1_out: V3 = [s, y1 + 0.12, z1 - roadW - walkW]
+    const wL1_in: V3 = [s, y1 + 0.12, z1 - roadW]
+    const wL2_out: V3 = [s2, y2 + 0.12, z2 - roadW - walkW]
+    const wL2_in: V3 = [s2, y2 + 0.12, z2 - roadW]
+    matte.quad(wL1_out, wL1_in, wL2_in, wL2_out, WALK)
+
+    const wR1_in: V3 = [s, y1 + 0.12, z1 + roadW]
+    const wR1_out: V3 = [s, y1 + 0.12, z1 + roadW + walkW]
+    const wR2_in: V3 = [s2, y2 + 0.12, z2 + roadW]
+    const wR2_out: V3 = [s2, y2 + 0.12, z2 + roadW + walkW]
+    matte.quad(wR1_in, wR1_out, wR2_out, wR1_out, WALK)
+
+    // Kerbs between road and footpaths
+    matte.quad(
+      [rL1[0], y1, rL1[2]],
+      [wL1_in[0], y1 + 0.12, wL1_in[2]],
+      [wL2_in[0], y2 + 0.12, wL2_in[2]],
+      [rL2[0], y2, rL2[2]],
+      CONCRETE
+    )
+    matte.quad(
+      [wR1_in[0], y1 + 0.12, wR1_in[2]],
+      [rR1[0], y1, rR1[2]],
+      [rR2[0], y2, rR2[2]],
+      [wR2_in[0], y2 + 0.12, wR2_in[2]],
+      CONCRETE
+    )
+
+    // Outer retaining walls down to the ground where elevated
+    if (y1 > 0.25 || y2 > 0.25) {
+      matte.quad(
+        [wL1_out[0], -0.5, wL1_out[2]],
+        [wL1_out[0], y1 + 0.1, wL1_out[2]],
+        [wL2_out[0], y2 + 0.1, wL2_out[2]],
+        [wL2_out[0], -0.5, wL2_out[2]],
+        STONE
+      )
+      matte.quad(
+        [wR1_out[0], -0.5, wR1_out[2]],
+        [wR2_out[0], -0.5, wR2_out[2]],
+        [wR2_out[0], y2 + 0.1, wR2_out[2]],
+        [wR1_out[0], y1 + 0.1, wR1_out[2]],
+        STONE
+      )
     }
 
-    // dashed centre line and lane lines
-    const mid = (s + s2) / 2
-    for (const zl of [-3.5, 0, 3.5, -7, 7]) {
-      matte.bar([mid - 1.6, deckY(mid - 1.6) + 0.012, zl], [mid + 1.6, deckY(mid + 1.6) + 0.012, zl], 0.02, 0.14, lin('#b9b3a4'))
+    // Outer railings along the cantilever span and early approach
+    if (s >= -END - 4 && s2 <= END + 4) {
+      for (const h of [0.55, 1.15]) {
+        steel.bar([wL1_out[0], y1 + h, wL1_out[2]], [wL2_out[0], y2 + h, wL2_out[2]], 0.08, 0.08, STEEL)
+        steel.bar([wR1_out[0], y1 + h, wR1_out[2]], [wR2_out[0], y2 + h, wR2_out[2]], 0.08, 0.08, STEEL)
+      }
+      steel.bar([wL1_out[0], y1, wL1_out[2]], [wL1_out[0], y1 + 1.2, wL1_out[2]], 0.1, 0.1, STEEL)
+      steel.bar([wR1_out[0], y1, wR1_out[2]], [wR1_out[0], y1 + 1.2, wR1_out[2]], 0.1, 0.1, STEEL)
     }
-    if (onBridge) matte.bar([s, y + 0.006, -B.roadHalf], [s, y + 0.006, B.roadHalf], 0.012, 0.07, lin('#2f2d2b'))
 
     if (onBridge) {
-      // floor beams
-      steel.bar([s, y - 1.4, -walkOut], [s, y - 1.4, walkOut], 1.5, 0.5, shade(STEEL, 0.78))
-    } else if (onRamp) {
-      // approach ramp: retaining walls down to the ground
-      const w = walkOut
+      // stringers under the deck edges
       for (const sg of [-1, 1]) {
-        const a: V3 = [s, -0.5, sg * w]
-        const b: V3 = [s2, -0.5, sg * w]
-        const c: V3 = [s2, y2 - 0.1, sg * w]
-        const d: V3 = [s, y - 0.1, sg * w]
-        if (sg > 0) matte.quad(a, b, c, d, STONE)
-        else matte.quad(b, a, d, c, STONE)
+        steel.bar([s, y1 - 1.5, sg * B.zT], [s2, y2 - 1.5, sg * B.zT], 2.0, 0.7, shade(STEEL, 0.8))
+        steel.bar([s, y1 - 1.1, sg * 4], [s2, y2 - 1.1, sg * 4], 1.1, 0.4, shade(STEEL, 0.75))
       }
+      // floor beams
+      steel.bar([s, y1 - 1.4, -walkOut], [s, y1 - 1.4, walkOut], 1.5, 0.5, shade(STEEL, 0.78))
+    }
+
+    // Dashed lane lines along the curve
+    const smid = (s + s2) / 2
+    const ymid = deckY(smid)
+    const zmid = roadCenterZ(smid)
+    const ds = s2 - s
+    const dz = z2 - z1
+    const segLen = Math.hypot(ds, dz) || 1
+    const tx = ds / segLen
+    const tz = dz / segLen
+
+    for (const f of [-0.68, -0.34, 0, 0.34, 0.68]) {
+      const zl = zmid + f * roadW
+      const p1: V3 = [smid - tx * 1.5, ymid + 0.02, zl - tz * 1.5]
+      const p2: V3 = [smid + tx * 1.5, ymid + 0.02, zl + tz * 1.5]
+      matte.bar(p1, p2, 0.02, 0.14, lin('#b9b3a4'))
     }
   }
 
