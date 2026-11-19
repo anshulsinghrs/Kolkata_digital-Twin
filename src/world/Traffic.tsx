@@ -386,7 +386,7 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
       }
       // Select arterial class roads (c === 0: Strand Rd, Brabourne Rd, MG Rd, Howrah loops) or wide thoroughfares (w >= 8.5)
       // This eliminates all narrow alleys and spaces between buildings so vehicles stay strictly on wide roadways
-      if (totalLen >= 40 && (r.c === 0 || r.w >= 8.5)) {
+      if ((totalLen >= 30 && (r.c === 0 || r.w >= 8.5)) || (r.c === 0 && totalLen >= 20)) {
         list.push({ idx, pts, cumDist, totalLen, w: r.w, c: r.c })
       }
     })
@@ -398,7 +398,7 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
   const vehicles = useMemo<VehicleAgent[]>(() => {
     const list: VehicleAgent[] = []
     
-    // 1. Howrah Bridge Dedicated Traffic: 72 vehicles organized into 8 strict lanes (9 per lane)
+    // 1. Howrah Bridge Dedicated Traffic: 96 vehicles organized into 8 strict lanes (12 per lane)
     // Indian Left-Hand Drive convention spanning from Howrah bank (-336m) to Kolkata bank (+336m)
     const bridgeLanesConfig = [
       // Eastbound Lanes (dir = +1)
@@ -475,7 +475,7 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
       },
     ]
 
-    const VEHICLES_PER_LANE = 9
+    const VEHICLES_PER_LANE = 12
     const span = BRIDGE_TOTAL_SPAN
 
     bridgeLanesConfig.forEach((cfg, laneIdx) => {
@@ -508,21 +508,21 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
       }
     })
 
-    // 2. Complete City Road Network Traffic (380 vehicles distributed across major OSM avenues)
+    // 2. Complete City Road Network Traffic (480 vehicles distributed across major OSM avenues)
     if (cityRoadPaths.length > 0) {
       // Priority weights: Major bridgehead highways (Brabourne Flyover 429, Strand Rd 431/650/818, Howrah Station 438/441/508/41) get dense continuous flow
-      const BRIDGEHEAD_ROADS = new Set([429, 431, 650, 818, 438, 439, 441, 508, 41, 221, 2, 751, 752, 33, 34, 20])
+      const BRIDGEHEAD_ROADS = new Set([429, 431, 650, 818, 438, 439, 441, 508, 41, 221, 2, 751, 752, 33, 34, 20, 430, 436, 442])
       const weights = cityRoadPaths.map((p) => {
         const isBridgehead = BRIDGEHEAD_ROADS.has(p.idx)
-        return p.totalLen * (isBridgehead ? 10.0 : (p.c === 0 ? 3.5 : 1.2))
+        return p.totalLen * (isBridgehead ? 15.0 : (p.c === 0 ? 3.5 : 1.2))
       })
       const totalWeight = weights.reduce((a, b) => a + b, 0)
-      const targetCityCount = 380
+      const targetCityCount = 480
 
       for (let pi = 0; pi < cityRoadPaths.length; pi++) {
         const path = cityRoadPaths[pi]
         const isBridgehead = BRIDGEHEAD_ROADS.has(path.idx)
-        const maxOnPath = isBridgehead ? 16 : 8
+        const maxOnPath = isBridgehead ? 26 : 10
         const numOnThisPath = Math.min(maxOnPath, Math.round((weights[pi] / totalWeight) * targetCityCount))
         if (numOnThisPath === 0) continue
 
@@ -847,8 +847,19 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
         v.laneOffset = THREE.MathUtils.lerp(v.laneOffset, v.targetLane, dt * 2.5)
       }
 
-      // Safe Car-Following Rule (IDM Deceleration) with live traffic speed factor
-      const effectiveTargetSpeed = v.targetSpeed * speedFactor
+      // Safe Car-Following Rule (IDM Deceleration) with live traffic speed factor and junction congestion (matches Google Maps Live Traffic)
+      let effectiveTargetSpeed = v.targetSpeed * speedFactor
+      if (v.isBridge) {
+        const absS = Math.abs(v.s)
+        if (absS > 220) {
+          // Bottleneck slowdown near riverbank merges (matches orange/red in Google Maps)
+          const mergeT = Math.min(1, (absS - 220) / (336 - 220))
+          effectiveTargetSpeed *= THREE.MathUtils.lerp(1.0, 0.48, mergeT)
+        }
+      } else if (v.path && (v.path.idx === 429 || v.path.idx === 438 || v.path.idx === 439 || v.path.idx === 2)) {
+        // High-density feeder roads moderate speed to 7-9 m/s for authentic urban flow
+        effectiveTargetSpeed = Math.min(effectiveTargetSpeed, 8.5)
+      }
       const minSafeGap = 3.0 // minimum standing gap (meters)
       const timeHeadway = 1.2 // safe time headway (seconds)
       const desiredGap = minSafeGap + Math.max(0, v.speed) * timeHeadway
