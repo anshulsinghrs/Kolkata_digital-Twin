@@ -5,13 +5,13 @@ import { useGLTF } from '@react-three/drei'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import type { SceneData } from './types'
 import { toPts } from './types'
-import { BRIDGE, deckY, RAMP_END, KOLKATA_CONNECT_END } from './Bridge'
+import { BRIDGE, deckY, RAMP_END } from './Bridge'
 import { WATER_Y } from './constants'
 
-// Bridge bounds: Howrah west approach (-RAMP_END = -517.6m) to Kolkata main road connection (KOLKATA_CONNECT_END = 556.0m)
-const BRIDGE_S_MIN = -RAMP_END
-const BRIDGE_S_MAX = KOLKATA_CONNECT_END
-const BRIDGE_TOTAL_SPAN = BRIDGE_S_MAX - BRIDGE_S_MIN // 1073.6 m total continuous corridor
+// Bridge bounds: spans the real Howrah Bridge from Howrah riverbank (-336m) to Kolkata riverbank (+336m)
+const BRIDGE_S_MIN = -RAMP_END // -336.0 m
+const BRIDGE_S_MAX = RAMP_END  // +336.0 m
+const BRIDGE_TOTAL_SPAN = BRIDGE_S_MAX - BRIDGE_S_MIN // 672.0 m total span over Hooghly river
 const TOTAL_HALF_SPAN = RAMP_END
 
 // Indian Left-Hand Drive Traffic Lane Layout on Howrah Bridge
@@ -369,7 +369,7 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
   const headLightMat = useMemo(() => new THREE.MeshBasicMaterial({ color: new THREE.Color('#fff9db') }), [])
   const tailLightMat = useMemo(() => new THREE.MeshBasicMaterial({ color: new THREE.Color('#ff1a00') }), [])
 
-  // Build Viable Road Paths across Complete City from OSM Roads (focus on continuous major avenues)
+  // Build Viable Road Paths across Complete City from OSM Roads (strictly major highways & arterials)
   const cityRoadPaths = useMemo<RoadPath[]>(() => {
     const list: RoadPath[] = []
     data.roads.forEach((r, idx) => {
@@ -384,8 +384,9 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
         totalLen += d
         cumDist.push(totalLen)
       }
-      // Select primary avenues and prominent thoroughfares (>=35m length, width >= 7m or arterial class)
-      if (totalLen >= 35 && (r.c === 0 || r.w >= 7.0)) {
+      // Select arterial class roads (c === 0: Strand Rd, Brabourne Rd, MG Rd, Howrah loops) or wide thoroughfares (w >= 8.5)
+      // This eliminates all narrow alleys and spaces between buildings so vehicles stay strictly on wide roadways
+      if (totalLen >= 40 && (r.c === 0 || r.w >= 8.5)) {
         list.push({ idx, pts, cumDist, totalLen, w: r.w, c: r.c })
       }
     })
@@ -398,7 +399,7 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
     const list: VehicleAgent[] = []
     
     // 1. Howrah Bridge Dedicated Traffic: 72 vehicles organized into 8 strict lanes (9 per lane)
-    // Indian Left-Hand Drive convention with realistic vehicle allocation per lane
+    // Indian Left-Hand Drive convention spanning from Howrah bank (-336m) to Kolkata bank (+336m)
     const bridgeLanesConfig = [
       // Eastbound Lanes (dir = +1)
       {
@@ -507,15 +508,22 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
       }
     })
 
-    // 2. Complete City Road Network Traffic (380 vehicles distributed across major avenues)
+    // 2. Complete City Road Network Traffic (380 vehicles distributed across major OSM avenues)
     if (cityRoadPaths.length > 0) {
-      const weights = cityRoadPaths.map((p) => p.totalLen * (p.c === 0 ? 3.0 : 1.2))
+      // Priority weights: Major bridgehead highways (Brabourne Flyover 429, Strand Rd 431/650/818, Howrah Station 438/441/508/41) get dense continuous flow
+      const BRIDGEHEAD_ROADS = new Set([429, 431, 650, 818, 438, 439, 441, 508, 41, 221, 2, 751, 752, 33, 34, 20])
+      const weights = cityRoadPaths.map((p) => {
+        const isBridgehead = BRIDGEHEAD_ROADS.has(p.idx)
+        return p.totalLen * (isBridgehead ? 10.0 : (p.c === 0 ? 3.5 : 1.2))
+      })
       const totalWeight = weights.reduce((a, b) => a + b, 0)
       const targetCityCount = 380
 
       for (let pi = 0; pi < cityRoadPaths.length; pi++) {
         const path = cityRoadPaths[pi]
-        const numOnThisPath = Math.min(8, Math.max(1, Math.round((weights[pi] / totalWeight) * targetCityCount)))
+        const isBridgehead = BRIDGEHEAD_ROADS.has(path.idx)
+        const maxOnPath = isBridgehead ? 16 : 8
+        const numOnThisPath = Math.min(maxOnPath, Math.round((weights[pi] / totalWeight) * targetCityCount))
         if (numOnThisPath === 0) continue
 
         for (let k = 0; k < numOnThisPath; k++) {
@@ -534,37 +542,39 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
             kind = 'cart'
             speed = 2.0 + (r * 0.5)
             len = 3.6; wid = 1.4; hei = 1.2
-            lateralRatio = isWide ? 0.32 : 0.22
+            lateralRatio = isWide ? 0.30 : 0.20
           } else if (r < 0.20) {
             kind = 'truck'
             speed = 7.0 + (r * 2.0)
             len = 8.2; wid = 2.4; hei = 2.8
-            lateralRatio = isWide ? 0.28 : 0.22
+            lateralRatio = isWide ? 0.26 : 0.20
           } else if (r < 0.36) {
             kind = 'bus'
             speed = 8.0 + (r * 2.5)
             len = 9.6; wid = 2.45; hei = 3.1
-            lateralRatio = isWide ? 0.25 : 0.20
+            lateralRatio = isWide ? 0.24 : 0.18
           } else if (r < 0.52) {
             kind = 'auto'
             speed = 9.0 + (r * 2.5)
             len = 2.8; wid = 1.35; hei = 1.7
-            lateralRatio = isWide ? 0.22 : 0.20
+            lateralRatio = isWide ? 0.20 : 0.18
           } else if (r < 0.70) {
             kind = 'bike'
             speed = 10.5 + (r * 3.0)
             len = 2.0; wid = 0.6; hei = 1.5
-            lateralRatio = isWide ? 0.15 : 0.18
+            lateralRatio = isWide ? 0.14 : 0.16
           } else {
             kind = 'taxi'
             speed = 11.0 + (r * 3.0)
             len = 4.4; wid = 1.72; hei = 1.5
-            lateralRatio = isWide ? 0.18 : 0.20
+            lateralRatio = isWide ? 0.16 : 0.18
           }
 
           // Spread initial s evenly along the road segment
           const s = ((k + 0.5) / numOnThisPath) * path.totalLen
-          const laneOffset = path.w * lateralRatio
+          // Ensure lateral offset keeps vehicle strictly on the asphalt carriageway away from curbs and building walls
+          const maxSafeOffset = Math.max(0.8, path.w * 0.5 - (wid * 0.5 + 0.8))
+          const laneOffset = Math.min(maxSafeOffset, path.w * lateralRatio)
 
           list.push({
             kind,
