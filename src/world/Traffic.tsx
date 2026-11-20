@@ -407,35 +407,35 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
         lane: BRIDGE_LANES_EAST.slowKerb,
         dir: 1,
         allowed: [
-          { kind: 'cart', weight: 3, len: 3.6, wid: 1.4, hei: 1.2, speed: 2.2 },
-          { kind: 'truck', weight: 4, len: 8.2, wid: 2.4, hei: 2.8, speed: 7.0 },
-          { kind: 'bus', weight: 3, len: 9.6, wid: 2.45, hei: 3.1, speed: 8.0 },
+          { kind: 'cart', weight: 3, len: 3.6, wid: 1.4, hei: 1.2, speed: 7.5 },
+          { kind: 'truck', weight: 4, len: 8.2, wid: 2.4, hei: 2.8, speed: 15.0 },
+          { kind: 'bus', weight: 3, len: 9.6, wid: 2.45, hei: 3.1, speed: 17.0 },
         ],
       },
       {
         lane: BRIDGE_LANES_EAST.middle1,
         dir: 1,
         allowed: [
-          { kind: 'bus', weight: 5, len: 9.6, wid: 2.45, hei: 3.1, speed: 8.5 },
-          { kind: 'truck', weight: 3, len: 8.2, wid: 2.4, hei: 2.8, speed: 7.5 },
-          { kind: 'taxi', weight: 2, len: 4.4, wid: 1.72, hei: 1.5, speed: 10.5 },
+          { kind: 'bus', weight: 5, len: 9.6, wid: 2.45, hei: 3.1, speed: 18.5 },
+          { kind: 'truck', weight: 3, len: 8.2, wid: 2.4, hei: 2.8, speed: 16.5 },
+          { kind: 'taxi', weight: 2, len: 4.4, wid: 1.72, hei: 1.5, speed: 22.0 },
         ],
       },
       {
         lane: BRIDGE_LANES_EAST.middle2,
         dir: 1,
         allowed: [
-          { kind: 'taxi', weight: 5, len: 4.4, wid: 1.72, hei: 1.5, speed: 11.5 },
-          { kind: 'auto', weight: 3, len: 2.8, wid: 1.35, hei: 1.7, speed: 9.5 },
-          { kind: 'bike', weight: 2, len: 2.0, wid: 0.6, hei: 1.5, speed: 12.0 },
+          { kind: 'taxi', weight: 5, len: 4.4, wid: 1.72, hei: 1.5, speed: 24.0 },
+          { kind: 'auto', weight: 3, len: 2.8, wid: 1.35, hei: 1.7, speed: 20.0 },
+          { kind: 'bike', weight: 2, len: 2.0, wid: 0.6, hei: 1.5, speed: 26.0 },
         ],
       },
       {
         lane: BRIDGE_LANES_EAST.fastInner,
         dir: 1,
         allowed: [
-          { kind: 'taxi', weight: 6, len: 4.4, wid: 1.72, hei: 1.5, speed: 12.5 },
-          { kind: 'bike', weight: 4, len: 2.0, wid: 0.6, hei: 1.5, speed: 13.5 },
+          { kind: 'taxi', weight: 6, len: 4.4, wid: 1.72, hei: 1.5, speed: 27.0 },
+          { kind: 'bike', weight: 4, len: 2.0, wid: 0.6, hei: 1.5, speed: 29.0 },
         ],
       },
       // Westbound Lanes (dir = -1)
@@ -443,35 +443,35 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
         lane: BRIDGE_LANES_WEST.fastInner,
         dir: -1,
         allowed: [
-          { kind: 'taxi', weight: 6, len: 4.4, wid: 1.72, hei: 1.5, speed: 12.5 },
-          { kind: 'bike', weight: 4, len: 2.0, wid: 0.6, hei: 1.5, speed: 13.5 },
+          { kind: 'taxi', weight: 6, len: 4.4, wid: 1.72, hei: 1.5, speed: 27.0 },
+          { kind: 'bike', weight: 4, len: 2.0, wid: 0.6, hei: 1.5, speed: 29.0 },
         ],
       },
       {
         lane: BRIDGE_LANES_WEST.middle2,
         dir: -1,
         allowed: [
-          { kind: 'taxi', weight: 5, len: 4.4, wid: 1.72, hei: 1.5, speed: 11.5 },
-          { kind: 'auto', weight: 3, len: 2.8, wid: 1.35, hei: 1.7, speed: 9.5 },
-          { kind: 'bike', weight: 2, len: 2.0, wid: 0.6, hei: 1.5, speed: 12.0 },
+          { kind: 'taxi', weight: 5, len: 4.4, wid: 1.72, hei: 1.5, speed: 24.0 },
+          { kind: 'auto', weight: 3, len: 2.8, wid: 1.35, hei: 1.7, speed: 20.0 },
+          { kind: 'bike', weight: 2, len: 2.0, wid: 0.6, hei: 1.5, speed: 26.0 },
         ],
       },
       {
         lane: BRIDGE_LANES_WEST.middle1,
         dir: -1,
         allowed: [
-          { kind: 'bus', weight: 5, len: 9.6, wid: 2.45, hei: 3.1, speed: 8.5 },
-          { kind: 'truck', weight: 3, len: 8.2, wid: 2.4, hei: 2.8, speed: 7.5 },
-          { kind: 'taxi', weight: 2, len: 4.4, wid: 1.72, hei: 1.5, speed: 10.5 },
+          { kind: 'bus', weight: 5, len: 9.6, wid: 2.45, hei: 3.1, speed: 18.5 },
+          { kind: 'truck', weight: 3, len: 8.2, wid: 2.4, hei: 2.8, speed: 16.5 },
+          { kind: 'taxi', weight: 2, len: 4.4, wid: 1.72, hei: 1.5, speed: 22.0 },
         ],
       },
       {
         lane: BRIDGE_LANES_WEST.slowKerb,
         dir: -1,
         allowed: [
-          { kind: 'cart', weight: 3, len: 3.6, wid: 1.4, hei: 1.2, speed: 2.2 },
-          { kind: 'truck', weight: 4, len: 8.2, wid: 2.4, hei: 2.8, speed: 7.0 },
-          { kind: 'bus', weight: 3, len: 9.6, wid: 2.45, hei: 3.1, speed: 8.0 },
+          { kind: 'cart', weight: 3, len: 3.6, wid: 1.4, hei: 1.2, speed: 7.5 },
+          { kind: 'truck', weight: 4, len: 8.2, wid: 2.4, hei: 2.8, speed: 15.0 },
+          { kind: 'bus', weight: 3, len: 9.6, wid: 2.45, hei: 3.1, speed: 17.0 },
         ],
       },
     ]
@@ -544,32 +544,32 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
 
           if (r < 0.06) {
             kind = 'cart'
-            speed = 2.2 + (r * 0.5)
+            speed = 7.5 + (r * 1.5)
             len = 3.6; wid = 1.4; hei = 1.2
             lateralRatio = isWide ? 0.30 : 0.20
           } else if (r < 0.18) {
             kind = 'truck'
-            speed = 7.5 + (r * 2.0)
+            speed = 16.0 + (r * 3.0)
             len = 8.2; wid = 2.4; hei = 2.8
             lateralRatio = isWide ? 0.26 : 0.20
           } else if (r < 0.35) {
             kind = 'bus'
-            speed = 8.5 + (r * 2.5)
+            speed = 18.0 + (r * 3.5)
             len = 9.6; wid = 2.45; hei = 3.1
             lateralRatio = isWide ? 0.24 : 0.18
           } else if (r < 0.52) {
             kind = 'auto'
-            speed = 9.5 + (r * 2.5)
+            speed = 20.0 + (r * 3.5)
             len = 2.8; wid = 1.35; hei = 1.7
             lateralRatio = isWide ? 0.20 : 0.18
           } else if (r < 0.70) {
             kind = 'bike'
-            speed = 11.0 + (r * 3.0)
+            speed = 24.0 + (r * 4.0)
             len = 2.0; wid = 0.6; hei = 1.5
             lateralRatio = isWide ? 0.14 : 0.16
           } else {
             kind = 'taxi'
-            speed = 11.5 + (r * 3.0)
+            speed = 25.0 + (r * 4.0)
             len = 4.4; wid = 1.72; hei = 1.5
             lateralRatio = isWide ? 0.16 : 0.18
           }
@@ -857,11 +857,11 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
         if (absS > 220) {
           // Bottleneck slowdown near riverbank merges (matches orange/red in Google Maps)
           const mergeT = Math.min(1, (absS - 220) / (336 - 220))
-          effectiveTargetSpeed *= THREE.MathUtils.lerp(1.0, 0.48, mergeT)
+          effectiveTargetSpeed *= THREE.MathUtils.lerp(1.0, 0.85, mergeT)
         }
       } else if (v.path && (v.path.idx === 429 || v.path.idx === 438 || v.path.idx === 439 || v.path.idx === 2)) {
         // High-density feeder roads moderate speed to 7-9 m/s for authentic urban flow
-        effectiveTargetSpeed = Math.min(effectiveTargetSpeed, 8.5)
+        effectiveTargetSpeed = Math.min(effectiveTargetSpeed, 22.0)
       }
       const minSafeGap = 2.5 // minimum standing gap (meters)
       const timeHeadway = 1.0 // safe time headway (seconds)
@@ -884,10 +884,10 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
         const headwayBuffer = Math.max(0, minClearance - minSafeGap)
         const safeApproachSpeed = Math.sqrt(2 * 2.8 * headwayBuffer)
         const targetV = Math.min(effectiveTargetSpeed, Math.max(leadSpeed, safeApproachSpeed))
-        v.speed = THREE.MathUtils.lerp(v.speed, Math.max(0.5, targetV), dt * 3.5)
+        v.speed = THREE.MathUtils.lerp(v.speed, Math.max(2.0, targetV), dt * 4.0)
       } else {
         // Free-flow acceleration
-        v.speed = THREE.MathUtils.lerp(v.speed, effectiveTargetSpeed, dt * 1.8)
+        v.speed = THREE.MathUtils.lerp(v.speed, effectiveTargetSpeed, dt * 2.8)
       }
 
       // Advance vehicle along road

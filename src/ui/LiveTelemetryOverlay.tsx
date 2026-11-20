@@ -66,6 +66,8 @@ export function LiveTelemetryOverlay({
   onRefresh,
   enableFog = false,
   onToggleFog,
+  trafficMultiplier = 1.5,
+  onCycleTrafficSpeed,
 }: {
   telemetry: LiveTelemetry | null
   loading: boolean
@@ -73,6 +75,8 @@ export function LiveTelemetryOverlay({
   onRefresh: () => void
   enableFog?: boolean
   onToggleFog?: () => void
+  trafficMultiplier?: number
+  onCycleTrafficSpeed?: () => void
 }) {
   const [open, setOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<'all' | 'weather' | 'air' | 'traffic' | 'flights' | 'trains'>('all')
@@ -147,6 +151,18 @@ export function LiveTelemetryOverlay({
               title={enableFog ? 'Atmospheric fog is active. Click to remove fog.' : 'Fog is removed (Crystal Clear). Click to enable live atmospheric fog.'}
             >
               {enableFog ? '🌫️ Fog: ON' : '☀️ Clear (No Fog)'}
+            </button>
+          )}
+          {onCycleTrafficSpeed && (
+            <button
+              className="telem-btn-speed"
+              onClick={(e) => {
+                e.stopPropagation()
+                onCycleTrafficSpeed()
+              }}
+              title="Adjust traffic speed multiplier (1.0x, 1.5x, 2.0x, 3.0x)"
+            >
+              ⚡ Traffic: {trafficMultiplier}x
             </button>
           )}
           <button
