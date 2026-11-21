@@ -7,6 +7,7 @@ import type { SceneData } from './types'
 import { toPts } from './types'
 import { BRIDGE, deckY, RAMP_END, roadCenterZ } from './Bridge'
 import { WATER_Y } from './constants'
+import { TrafficSignals, type SignalPhase, PHASE_DURATIONS } from './TrafficSignals'
 
 // Bridge bounds: spans Howrah riverbank (-336m) to Kolkata Road 2 junction (+352m)
 const BRIDGE_S_MIN = -336.0
@@ -56,6 +57,13 @@ interface VehicleAgent {
   width: number        // vehicle width (m)
   height: number       // vehicle height (m)
   isFiltering?: boolean
+  // Systems from CGV_Proj:
+  isBraking?: boolean
+  blinker?: {
+    which: -1 | 0 | 1 // -1=left, 0=none, +1=right
+    time: number
+    isLighting: boolean
+  }
 }
 
 interface PedestrianAgent {
@@ -367,7 +375,10 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
   )
 
   const headLightMat = useMemo(() => new THREE.MeshBasicMaterial({ color: new THREE.Color('#fff9db') }), [])
-  const tailLightMat = useMemo(() => new THREE.MeshBasicMaterial({ color: new THREE.Color('#ff1a00') }), [])
+  const tailLightMat = useMemo(() => new THREE.MeshBasicMaterial({ color: new THREE.Color('#990a00') }), [])
+  // CGV_Proj active brake lights (intense crimson red) and amber turn indicators
+  const brakeLightMat = useMemo(() => new THREE.MeshBasicMaterial({ color: new THREE.Color('#ff0022') }), [])
+  const blinkerMat = useMemo(() => new THREE.MeshBasicMaterial({ color: new THREE.Color('#ff9500') }), [])
 
   // Build Viable Road Paths across Complete City from OSM Roads (strictly major highways & arterials)
   const cityRoadPaths = useMemo<RoadPath[]>(() => {
@@ -746,6 +757,12 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
   const pedMesh = useRef<THREE.InstancedMesh>(null!)
   const headLightMesh = useRef<THREE.InstancedMesh>(null!)
   const tailLightMesh = useRef<THREE.InstancedMesh>(null!)
+  const brakeLightMesh = useRef<THREE.InstancedMesh>(null!)
+  const blinkerMesh = useRef<THREE.InstancedMesh>(null!)
+  
+  // Traffic Signal State Machine (from CGV_Proj CrossLights)
+  const signalPhaseRef = useRef<SignalPhase>('bridge_green')
+  const signalTimerRef = useRef<number>(0)
 
   const ferryGroup = useRef<THREE.Group>(null!)
   const trainGroup = useRef<THREE.Group>(null!)
@@ -784,6 +801,16 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
       tailLightMesh.current.count = 0
       tailLightMesh.current.instanceMatrix.needsUpdate = true
     }
+    if (brakeLightMesh.current) {
+      for (let i = 0; i < MAX_LIGHTS; i++) brakeLightMesh.current.setMatrixAt(i, offscreen)
+      brakeLightMesh.current.count = 0
+      brakeLightMesh.current.instanceMatrix.needsUpdate = true
+    }
+    if (blinkerMesh.current) {
+      for (let i = 0; i < MAX_LIGHTS; i++) blinkerMesh.current.setMatrixAt(i, offscreen)
+      blinkerMesh.current.count = 0
+      blinkerMesh.current.instanceMatrix.needsUpdate = true
+    }
   }, [MAX_INSTANCES, TOTAL_PEDS])
 
   const dummy = useMemo(() => new THREE.Object3D(), [])
@@ -794,6 +821,25 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
   // Animation & Multi-Agent Traffic Loop
   useFrame((_, delta) => {
     const dt = Math.min(delta, 0.08)
+
+    // 0. Update CGV_Proj Traffic Signal Phase Machine
+    signalTimerRef.current += dt
+    const curDur = PHASE_DURATIONS[signalPhaseRef.current] || 15.0
+    if (signalTimerRef.current >= curDur) {
+      signalTimerRef.current = 0
+      const nextPhaseMap: Record<SignalPhase, SignalPhase> = {
+        bridge_green: 'bridge_yellow',
+        bridge_yellow: 'all_red_1',
+        all_red_1: 'cross_green',
+        cross_green: 'cross_yellow',
+        cross_yellow: 'all_red_2',
+        all_red_2: 'bridge_green',
+      }
+      signalPhaseRef.current = nextPhaseMap[signalPhaseRef.current] || 'bridge_green'
+    }
+    const currentPhase = signalPhaseRef.current
+    const isBridgeGreen = currentPhase === 'bridge_green'
+    const isCrossGreen = currentPhase === 'cross_green'
 
     // 1. Multi-Agent Simulation: Car-Following, Collision Avoidance, IDM
     for (let i = 0; i < vehicles.length; i++) {
@@ -850,26 +896,59 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
         v.laneOffset = THREE.MathUtils.lerp(v.laneOffset, v.targetLane, dt * 2.5)
       }
 
-      // Safe Car-Following Rule (IDM Deceleration) with live traffic speed factor and junction congestion (matches Google Maps Live Traffic)
+      // Safe Car-Following & Intersection Signal Control (from CGV_Proj Vehicle::setVelocity & CrossLights)
       let effectiveTargetSpeed = v.targetSpeed * speedFactor
       if (v.isBridge) {
         const absS = Math.abs(v.s)
         if (absS > 220) {
-          // Bottleneck slowdown near riverbank merges (matches orange/red in Google Maps)
           const mergeT = Math.min(1, (absS - 220) / (336 - 220))
           effectiveTargetSpeed *= THREE.MathUtils.lerp(1.0, 0.85, mergeT)
         }
       } else if (v.path && (v.path.idx === 429 || v.path.idx === 438 || v.path.idx === 439 || v.path.idx === 2)) {
-        // High-density feeder roads moderate speed to 7-9 m/s for authentic urban flow
         effectiveTargetSpeed = Math.min(effectiveTargetSpeed, 22.0)
       }
+
+      // 1.1 Intersection Signal Stop Control (CGV_Proj approachLimit)
+      // Check Kolkata bridgehead signal stop line at s = 330
+      if (v.isBridge && v.dir > 0 && v.s > 280 && v.s < 332) {
+        if (!isBridgeGreen) {
+          const distToStop = 330 - v.s
+          const approachLimit = Math.max(0, distToStop - 2.5) * 1.6
+          if (approachLimit < effectiveTargetSpeed) {
+            effectiveTargetSpeed = approachLimit
+          }
+        }
+      }
+      // Check Howrah Station approach signal stop line at s = -320
+      if (v.isBridge && v.dir < 0 && v.s < -275 && v.s > -324) {
+        if (!isBridgeGreen) {
+          const distToStop = v.s - (-320)
+          const approachLimit = Math.max(0, distToStop - 2.5) * 1.6
+          if (approachLimit < effectiveTargetSpeed) {
+            effectiveTargetSpeed = approachLimit
+          }
+        }
+      }
+      // Check Cross street signals (Road 431, 650, 429)
+      if (v.path && (v.path.idx === 431 || v.path.idx === 650 || v.path.idx === 429)) {
+        const stopDist = v.path.totalLen * 0.5
+        if (!isCrossGreen && v.s > stopDist - 40 && v.s < stopDist + 2) {
+          const distToStop = stopDist - v.s
+          const approachLimit = Math.max(0, distToStop - 2.5) * 1.6
+          if (approachLimit < effectiveTargetSpeed) {
+            effectiveTargetSpeed = approachLimit
+          }
+        }
+      }
+
+      // 1.2 Car-Following Anti-Collision (from CGV_Proj setVelocity)
+      const prevSpeed = v.speed
       const minSafeGap = 2.5 // minimum standing gap (meters)
       const timeHeadway = 1.0 // safe time headway (seconds)
       const desiredGap = minSafeGap + Math.max(0, v.speed) * timeHeadway
 
       if (leadAgent && minClearance < 1.2) {
-        // Anti-collision separation
-        v.speed = Math.max(0.5, leadSpeed * 0.5)
+        v.speed = Math.max(0, leadSpeed * 0.4)
         const reqDist = v.length * 0.5 + leadAgent.length * 0.5 + 1.2
         v.s = leadAgent.s - v.dir * reqDist
         if (v.isBridge) {
@@ -880,14 +959,40 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
           if (v.s > span) v.s -= span
         }
       } else if (leadAgent && minClearance < desiredGap) {
-        // Safe approach without cyclic deadlocking
         const headwayBuffer = Math.max(0, minClearance - minSafeGap)
-        const safeApproachSpeed = Math.sqrt(2 * 2.8 * headwayBuffer)
+        const safeApproachSpeed = Math.sqrt(2 * 3.5 * headwayBuffer)
         const targetV = Math.min(effectiveTargetSpeed, Math.max(leadSpeed, safeApproachSpeed))
-        v.speed = THREE.MathUtils.lerp(v.speed, Math.max(2.0, targetV), dt * 4.0)
+        v.speed = THREE.MathUtils.lerp(v.speed, Math.max(0, targetV), dt * 4.0)
       } else {
-        // Free-flow acceleration
         v.speed = THREE.MathUtils.lerp(v.speed, effectiveTargetSpeed, dt * 2.8)
+      }
+
+      // 1.3 CGV_Proj Braking State & Turn Blinkers
+      const decel = (prevSpeed - v.speed) / (dt + 0.001)
+      v.isBraking = decel > 1.2 || (v.speed < 1.0 && minClearance < desiredGap + 2.0) || (effectiveTargetSpeed < 0.5 && v.speed < 2.0)
+
+      if (!v.blinker) {
+        v.blinker = { which: 0, time: 0, isLighting: false }
+      }
+      if (v.isFiltering) {
+        v.blinker.which = v.dir > 0 ? 1 : -1
+      } else if (v.isBridge && v.s > 265 && v.dir > 0) {
+        // Curving right onto Kolkata approach
+        v.blinker.which = 1
+      } else if (Math.abs(v.targetLane - v.laneOffset) > 0.35) {
+        v.blinker.which = v.targetLane > v.laneOffset ? 1 : -1
+      } else {
+        v.blinker.which = 0
+      }
+
+      if (v.blinker.which !== 0) {
+        v.blinker.time += dt
+        if (v.blinker.time > 0.45) {
+          v.blinker.time = 0
+          v.blinker.isLighting = !v.blinker.isLighting
+        }
+      } else {
+        v.blinker.isLighting = false
       }
 
       // Advance vehicle along road
@@ -910,7 +1015,10 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
     let bikeIdx = 0
     let cartIdx = 0
     let truckIdx = 0
-    let lightIdx = 0
+    let headLightIdx = 0
+    let tailLightIdx = 0
+    let brakeLightIdx = 0
+    let blinkerIdx = 0
 
     for (let i = 0; i < vehicles.length; i++) {
       const v = vehicles[i]
@@ -1003,48 +1111,83 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
           break
       }
 
-      // Headlights & Taillights for motorized vehicles
-      if (v.kind !== 'cart' && lightIdx < MAX_LIGHTS - 2) {
+      // Headlights, Taillights, Active Brake Lights & Blinkers (inspired by CGV_Proj)
+      if (v.kind !== 'cart') {
         const halfL = v.length * 0.48
         const halfW = v.kind === 'bus' || v.kind === 'truck' ? 1.05 : (v.kind === 'bike' ? 0.0 : 0.7)
         const hY = v.kind === 'bus' || v.kind === 'truck' ? 0.75 : 0.52
 
-        // Front Headlights (-Z is front)
-        if (halfW > 0) {
-          lightDummy.position.set(-halfW, hY, -halfL)
-          lightDummy.rotation.set(0, 0, 0)
-          lightDummy.updateMatrix()
-          lightWorldMatrix.multiplyMatrices(worldMatrix, lightDummy.matrix)
-          headLightMesh.current?.setMatrixAt(lightIdx++, lightWorldMatrix)
+        // 1. Front Headlights (-Z is front)
+        if (headLightIdx < MAX_LIGHTS - 2) {
+          if (halfW > 0) {
+            lightDummy.position.set(-halfW, hY, -halfL)
+            lightDummy.scale.set(1, 1, 1)
+            lightDummy.rotation.set(0, 0, 0)
+            lightDummy.updateMatrix()
+            lightWorldMatrix.multiplyMatrices(worldMatrix, lightDummy.matrix)
+            headLightMesh.current?.setMatrixAt(headLightIdx++, lightWorldMatrix)
 
-          lightDummy.position.set(halfW, hY, -halfL)
-          lightDummy.updateMatrix()
-          lightWorldMatrix.multiplyMatrices(worldMatrix, lightDummy.matrix)
-          headLightMesh.current?.setMatrixAt(lightIdx++, lightWorldMatrix)
-        } else {
-          lightDummy.position.set(0, hY, -halfL)
-          lightDummy.rotation.set(0, 0, 0)
-          lightDummy.updateMatrix()
-          lightWorldMatrix.multiplyMatrices(worldMatrix, lightDummy.matrix)
-          headLightMesh.current?.setMatrixAt(lightIdx++, lightWorldMatrix)
+            lightDummy.position.set(halfW, hY, -halfL)
+            lightDummy.updateMatrix()
+            lightWorldMatrix.multiplyMatrices(worldMatrix, lightDummy.matrix)
+            headLightMesh.current?.setMatrixAt(headLightIdx++, lightWorldMatrix)
+          } else {
+            lightDummy.position.set(0, hY, -halfL)
+            lightDummy.scale.set(1, 1, 1)
+            lightDummy.rotation.set(0, 0, 0)
+            lightDummy.updateMatrix()
+            lightWorldMatrix.multiplyMatrices(worldMatrix, lightDummy.matrix)
+            headLightMesh.current?.setMatrixAt(headLightIdx++, lightWorldMatrix)
+          }
         }
 
-        // Rear Taillights (+Z is rear)
-        if (halfW > 0) {
-          lightDummy.position.set(-halfW, hY, halfL)
-          lightDummy.updateMatrix()
-          lightWorldMatrix.multiplyMatrices(worldMatrix, lightDummy.matrix)
-          tailLightMesh.current?.setMatrixAt(lightIdx - 2, lightWorldMatrix)
+        // 2. Rear Taillights vs Active Brake Lights (CGV_Proj isBraking)
+        const isBraking = !!v.isBraking
+        const targetTailMesh = isBraking ? brakeLightMesh : tailLightMesh
+        let curTailIdx = isBraking ? brakeLightIdx : tailLightIdx
 
-          lightDummy.position.set(halfW, hY, halfL)
+        if (curTailIdx < MAX_LIGHTS - 2) {
+          const bScale = isBraking ? 1.4 : 1.0
+          if (halfW > 0) {
+            lightDummy.position.set(-halfW, hY, halfL)
+            lightDummy.scale.set(bScale, bScale, bScale)
+            lightDummy.rotation.set(0, 0, 0)
+            lightDummy.updateMatrix()
+            lightWorldMatrix.multiplyMatrices(worldMatrix, lightDummy.matrix)
+            targetTailMesh.current?.setMatrixAt(curTailIdx++, lightWorldMatrix)
+
+            lightDummy.position.set(halfW, hY, halfL)
+            lightDummy.updateMatrix()
+            lightWorldMatrix.multiplyMatrices(worldMatrix, lightDummy.matrix)
+            targetTailMesh.current?.setMatrixAt(curTailIdx++, lightWorldMatrix)
+          } else {
+            lightDummy.position.set(0, hY, halfL)
+            lightDummy.scale.set(bScale, bScale, bScale)
+            lightDummy.rotation.set(0, 0, 0)
+            lightDummy.updateMatrix()
+            lightWorldMatrix.multiplyMatrices(worldMatrix, lightDummy.matrix)
+            targetTailMesh.current?.setMatrixAt(curTailIdx++, lightWorldMatrix)
+          }
+          if (isBraking) brakeLightIdx = curTailIdx; else tailLightIdx = curTailIdx;
+        }
+
+        // 3. Amber Turn Indicator Blinkers (CGV_Proj Blinker)
+        if (v.blinker?.isLighting && v.blinker.which !== 0 && blinkerIdx < MAX_LIGHTS - 2) {
+          const bx = v.blinker.which * (halfW > 0 ? halfW + 0.12 : 0.28)
+          lightDummy.scale.set(1.3, 1.3, 1.3)
+          lightDummy.rotation.set(0, 0, 0)
+
+          // Front indicator
+          lightDummy.position.set(bx, hY, -halfL)
           lightDummy.updateMatrix()
           lightWorldMatrix.multiplyMatrices(worldMatrix, lightDummy.matrix)
-          tailLightMesh.current?.setMatrixAt(lightIdx - 1, lightWorldMatrix)
-        } else {
-          lightDummy.position.set(0, hY, halfL)
+          blinkerMesh.current?.setMatrixAt(blinkerIdx++, lightWorldMatrix)
+
+          // Rear indicator
+          lightDummy.position.set(bx, hY, halfL)
           lightDummy.updateMatrix()
           lightWorldMatrix.multiplyMatrices(worldMatrix, lightDummy.matrix)
-          tailLightMesh.current?.setMatrixAt(lightIdx - 1, lightWorldMatrix)
+          blinkerMesh.current?.setMatrixAt(blinkerIdx++, lightWorldMatrix)
         }
       }
     }
@@ -1056,8 +1199,10 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
     if (bikeMesh.current) { bikeMesh.current.count = bikeIdx; bikeMesh.current.instanceMatrix.needsUpdate = true }
     if (cartMesh.current) { cartMesh.current.count = cartIdx; cartMesh.current.instanceMatrix.needsUpdate = true }
     if (truckMesh.current) { truckMesh.current.count = truckIdx; truckMesh.current.instanceMatrix.needsUpdate = true }
-    if (headLightMesh.current) { headLightMesh.current.count = lightIdx; headLightMesh.current.instanceMatrix.needsUpdate = true }
-    if (tailLightMesh.current) { tailLightMesh.current.count = lightIdx; tailLightMesh.current.instanceMatrix.needsUpdate = true }
+    if (headLightMesh.current) { headLightMesh.current.count = headLightIdx; headLightMesh.current.instanceMatrix.needsUpdate = true }
+    if (tailLightMesh.current) { tailLightMesh.current.count = tailLightIdx; tailLightMesh.current.instanceMatrix.needsUpdate = true }
+    if (brakeLightMesh.current) { brakeLightMesh.current.count = brakeLightIdx; brakeLightMesh.current.instanceMatrix.needsUpdate = true }
+    if (blinkerMesh.current) { blinkerMesh.current.count = blinkerIdx; blinkerMesh.current.instanceMatrix.needsUpdate = true }
 
     // 3. Render Pedestrian Crowd
     if (pedMesh.current) {
@@ -1182,9 +1327,14 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
       {/* Pedestrians - Single InstancedMesh for bridge, ghats & city */}
       <instancedMesh ref={pedMesh} args={[pedGeo, pedMat, TOTAL_PEDS]} castShadow />
 
-      {/* Vehicle Lights */}
+      {/* 3D Traffic Signals & Zebra Crosswalks (from CGV_Proj) */}
+      <TrafficSignals phase={signalPhaseRef.current} />
+
+      {/* Vehicle Lights (Headlights, Taillights, Active Brake Lights & Blinkers) */}
       <instancedMesh ref={headLightMesh} args={[lightGeo, headLightMat, MAX_LIGHTS]} />
       <instancedMesh ref={tailLightMesh} args={[lightGeo, tailLightMat, MAX_LIGHTS]} />
+      <instancedMesh ref={brakeLightMesh} args={[lightGeo, brakeLightMat, MAX_LIGHTS]} />
+      <instancedMesh ref={blinkerMesh} args={[lightGeo, blinkerMat, MAX_LIGHTS]} />
 
       {/* Hooghly River Passenger Ferries */}
       <group ref={ferryGroup}>
