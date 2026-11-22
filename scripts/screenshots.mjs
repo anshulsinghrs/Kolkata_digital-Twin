@@ -33,7 +33,9 @@ for (const id of ids) {
   const q = id.includes(',') ? `cam=${id}` : `shot=${id}`
   const name = id.includes(',') ? `cam_${id.replace(/,/g, '_')}` : id
   await page.goto(`${base}/?${q}&dpr=${process.env.DPR || 1.25}&freeze=${process.env.FRAMES || 10}`)
-  await page.waitForFunction(() => window.__frozen === true, null, { timeout: 600000, polling: 500 })
+  try {
+    await page.waitForFunction(() => window.__frozen === true, null, { timeout: 3500, polling: 200 })
+  } catch {}
   await page.waitForTimeout(1500)
   await page.screenshot({ path: `${out}/${name}.png`, timeout: 120000 })
   const stats = await page.evaluate(() => window.__stats)

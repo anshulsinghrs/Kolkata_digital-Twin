@@ -30,9 +30,9 @@ export const SIGNAL_JUNCTIONS: SignalJunctionData[] = [
   {
     id: 'howrah_station_loop',
     name: 'Howrah Station & Riverfront Boulevard Junction',
-    pos: [-324.0, 0.2, -86.0],
-    rotY: -0.26 + Math.PI * 0.5,
-    width: 22,
+    pos: [-285.7, 0.2, -13.4],
+    rotY: 0.5,
+    width: 24,
   },
   {
     id: 'strand_mg_crossing',

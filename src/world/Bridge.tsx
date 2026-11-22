@@ -29,6 +29,19 @@ export const KOLKATA_CONNECT_END = 352.0
 
 /** Centerline lateral position (Z in bridge frame, positive = South) */
 export function roadCenterZ(s: number): number {
+  if (s < 0) {
+    // Howrah Bridgehead approach: curves south into Bankim Setu / Road 41 & Road 442
+    if (s >= -320.0) return 0
+    if (s >= -332.0) {
+      const t = (-s - 320.0) / (332.0 - 320.0)
+      return 4.0 * (t * t * (3 - 2 * t))
+    }
+    if (s >= -375.0) {
+      const t = (-s - 332.0) / (375.0 - 332.0)
+      return 4.0 + (60.5 - 4.0) * (t * t * (3 - 2 * t))
+    }
+    return 60.5
+  }
   if (s <= 275.0) return 0
   if (s <= 302.4) {
     const t = (s - 275.0) / (302.4 - 275.0)
@@ -191,13 +204,13 @@ function buildBridge() {
   }
 
   // Roadway and footpaths:
-  // Continuous carriageway from Howrah bank (-336m) to Kolkata bank (+352m),
-  // smoothly curving into Road 2 & Brabourne Flyover on the Kolkata bank!
+  // Continuous carriageway from Howrah bank (-375m) to Kolkata bank (+352m),
+  // smoothly curving into Road 41 / Bankim Setu on Howrah bank and Road 2 / Brabourne Flyover on Kolkata bank!
   const walkIn = B.zT + 1.0
   const walkOut = walkIn + B.walk
-  const sStart = -336.0
+  const sStart = -375.0
   const sEnd = 352.0
-  const STEP = 4.0 // 4m steps for smooth curve geometry
+  const STEP = 3.0 // 3m steps for smooth curve geometry
 
   for (let s = sStart; s < sEnd - 0.01; s += STEP) {
     const s2 = Math.min(s + STEP, sEnd)
@@ -248,8 +261,8 @@ function buildBridge() {
       CONCRETE
     )
 
-    // Outer retaining walls down to the ground where elevated
-    if (y1 > 0.25 || y2 > 0.25) {
+    // Outer retaining walls down to the ground where elevated above curb level
+    if (y1 > 0.40 || y2 > 0.40) {
       matte.quad(
         [wL1_out[0], -0.5, wL1_out[2]],
         [wL1_out[0], y1 + 0.1, wL1_out[2]],
@@ -304,38 +317,150 @@ function buildBridge() {
     }
   }
 
-  // 1. HOWRAH BRIDGEHEAD PAVED JUNCTION PLAZA (Western Bank):
-  // Seamlessly connects the Howrah bridgehead directly into Howrah Station approach loops,
-  // Bankim Setu flyover (Road 41), Grand Trunk Road (Road 441), and Riverfront Boulevard.
-  // Paves the entire junction expanse with solid asphalt so the bridge physically merges with the road network.
-  const H_S_START = -375.0
-  const H_S_END = -280.0
+  // 1A. DIRECT HOWRAH MAIN ROAD CONNECTOR (Bankim Setu Flyover / Road 41):
+  // 24m wide arterial sweeping directly from the Howrah bridge portal (s = -327.6, z = 0)
+  // curving south-east into Road 442 and Road 41 (s = -279.8, z = 60.5).
+  // Ensures the 6-lane highway in the foreground is physically and visually merged with the bridge!
+  const hConnPts: [number, number][] = []
+  const N_H_CONN = 18
+  for (let i = 0; i <= N_H_CONN; i++) {
+    const t = i / N_H_CONN
+    const h00 = 2 * t * t * t - 3 * t * t + 1
+    const h10 = t * t * t - 2 * t * t + t
+    const h01 = -2 * t * t * t + 3 * t * t
+    const h11 = t * t * t - t * t
+    const p0 = [-327.6, 0.0]
+    const v0 = [-35.0, 25.0]
+    const p1 = [-279.8, 60.5]
+    const v1 = [25.0, 55.0]
+    const s = h00 * p0[0] + h10 * v0[0] + h01 * p1[0] + h11 * v1[0]
+    const z = h00 * p0[1] + h10 * v0[1] + h01 * p1[1] + h11 * v1[1]
+    hConnPts.push([s, z])
+  }
+
+  const CONN_W = 12.0 // 24m total width (matching Road 41 width of 24m)
+  for (let i = 0; i < hConnPts.length - 1; i++) {
+    const pA = hConnPts[i]
+    const pB = hConnPts[i + 1]
+    const ds = pB[0] - pA[0]
+    const dz = pB[1] - pA[1]
+    const len = Math.hypot(ds, dz) || 1
+    const ts = ds / len
+    const tz = dz / len
+    const nx = -tz
+    const nz = ts
+    const y = 0.15
+
+    const p0L: V3 = [pA[0] + nx * CONN_W, y, pA[1] + nz * CONN_W]
+    const p0R: V3 = [pA[0] - nx * CONN_W, y, pA[1] - nz * CONN_W]
+    const p1L: V3 = [pB[0] + nx * CONN_W, y, pB[1] + nz * CONN_W]
+    const p1R: V3 = [pB[0] - nx * CONN_W, y, pB[1] - nz * CONN_W]
+
+    matte.quad(p0R, p0L, p1L, p1R, ASPHALT)
+
+    // Sidewalk and concrete curb on the outer southern flank
+    const sw0_in = p0L
+    const sw0_out: V3 = [pA[0] + nx * (CONN_W + 3.0), y + 0.12, pA[1] + nz * (CONN_W + 3.0)]
+    const sw1_in = p1L
+    const sw1_out: V3 = [pB[0] + nx * (CONN_W + 3.0), y + 0.12, pB[1] + nz * (CONN_W + 3.0)]
+    matte.quad(sw0_in, sw0_out, sw1_out, sw1_in, WALK)
+    matte.quad([sw0_in[0], y, sw0_in[2]], [sw0_in[0], y + 0.12, sw0_in[2]], [sw1_in[0], y + 0.12, sw1_in[2]], [sw1_in[0], y, sw1_in[2]], CONCRETE)
+
+    // Dashed white lane markings (5 dividing lines across the 24m roadway)
+    const midS = (pA[0] + pB[0]) * 0.5
+    const midZ = (pA[1] + pB[1]) * 0.5
+    for (const f of [-0.67, -0.33, 0.0, 0.33, 0.67]) {
+      const markS = midS + nx * (f * CONN_W)
+      const markZ = midZ + nz * (f * CONN_W)
+      matte.bar(
+        [markS - ts * 1.5, y + 0.02, markZ - tz * 1.5],
+        [markS + ts * 1.5, y + 0.02, markZ + tz * 1.5],
+        0.02,
+        0.16,
+        lin('#b9b3a4')
+      )
+    }
+  }
+
+  // 1B. NORTH FORECOURT / GRAND TRUNK ROAD ARTERIAL CONNECTOR (Road 3, 989, 438):
+  // 24m wide 6-lane curved arterial sweeping from Grand Trunk Road / Howrah Station Forecourt
+  // (Road 3 at s = -360.5, z = -35.6 and Road 989 at s = -331.7, z = -31.1) directly into the Howrah Bridge Portal (s = -327.6, z = 0.0).
+  // Seamlessly connects the entire northern road network to the bridge!
+  const nConnPts: [number, number][] = []
+  const N_H_NORTH = 16
+  for (let i = 0; i <= N_H_NORTH; i++) {
+    const t = i / N_H_NORTH
+    const h00 = 2 * t * t * t - 3 * t * t + 1
+    const h10 = t * t * t - 2 * t * t + t
+    const h01 = -2 * t * t * t + 3 * t * t
+    const h11 = t * t * t - t * t
+    const p0 = [-360.5, -35.6]
+    const v0 = [30.0, 5.0]
+    const p1 = [-327.6, 0.0]
+    const v1 = [35.0, 35.0]
+    const s = h00 * p0[0] + h10 * v0[0] + h01 * p1[0] + h11 * v1[0]
+    const z = h00 * p0[1] + h10 * v0[1] + h01 * p1[1] + h11 * v1[1]
+    nConnPts.push([s, z])
+  }
+
+  const NORTH_W = 12.0 // 24m total width (matching Road 3 & Road 989 width of 24m!)
+  for (let i = 0; i < nConnPts.length - 1; i++) {
+    const pA = nConnPts[i]
+    const pB = nConnPts[i + 1]
+    const ds = pB[0] - pA[0]
+    const dz = pB[1] - pA[1]
+    const len = Math.hypot(ds, dz) || 1
+    const ts = ds / len
+    const tz = dz / len
+    const nx = -tz
+    const nz = ts
+    const y = 0.155
+
+    const p0L: V3 = [pA[0] + nx * NORTH_W, y, pA[1] + nz * NORTH_W]
+    const p0R: V3 = [pA[0] - nx * NORTH_W, y, pA[1] - nz * NORTH_W]
+    const p1L: V3 = [pB[0] + nx * NORTH_W, y, pB[1] + nz * NORTH_W]
+    const p1R: V3 = [pB[0] - nx * NORTH_W, y, pB[1] - nz * NORTH_W]
+
+    matte.quad(p0R, p0L, p1L, p1R, ASPHALT)
+
+    // Sidewalk and concrete curb on the outer northern flank facing Building 951
+    const sw0_in = p0R
+    const sw0_out: V3 = [pA[0] - nx * (NORTH_W + 3.0), y + 0.12, pA[1] - nz * (NORTH_W + 3.0)]
+    const sw1_in = p1R
+    const sw1_out: V3 = [pB[0] - nx * (NORTH_W + 3.0), y + 0.12, pB[1] - nz * (NORTH_W + 3.0)]
+    matte.quad(sw0_out, sw0_in, sw1_in, sw1_out, WALK)
+    matte.quad([sw0_in[0], y, sw0_in[2]], [sw0_in[0], y + 0.12, sw0_in[2]], [sw1_in[0], y + 0.12, sw1_in[2]], [sw1_in[0], y, sw1_in[2]], CONCRETE)
+
+    // Dashed white lane markings (5 dividing lines across the 24m roadway)
+    const midS = (pA[0] + pB[0]) * 0.5
+    const midZ = (pA[1] + pB[1]) * 0.5
+    for (const f of [-0.67, -0.33, 0.0, 0.33, 0.67]) {
+      const markS = midS + nx * (f * NORTH_W)
+      const markZ = midZ + nz * (f * NORTH_W)
+      matte.bar(
+        [markS - ts * 1.5, y + 0.02, markZ - tz * 1.5],
+        [markS + ts * 1.5, y + 0.02, markZ + tz * 1.5],
+        0.02,
+        0.16,
+        lin('#b9b3a4')
+      )
+    }
+  }
+
+  // 1C. HOWRAH BRIDGEHEAD PAVED JUNCTION EXPANSE:
+  // Complete asphalt apron covering the entire junction area so there is zero dirt/grass gap
+  // between the bridge portal, Bankim Setu (Road 41), Road 442, Grand Trunk Road (Road 3/989), and Riverfront Road (430).
+  const H_S_START = -385.0
+  const H_S_END = -268.0
   const H_STEP = 3.0
   for (let s = H_S_START; s < H_S_END - 0.01; s += H_STEP) {
     const s2 = Math.min(s + H_STEP, H_S_END)
-    const y1 = deckY(s)
-    const y2 = deckY(s2)
-    // Left boundary (South: towards Howrah Station complex & Grand Trunk Road)
-    // Right boundary (North: towards Bankim Setu elevated flyover loop)
-    const zLeft = -52.0
-    const zRight = 68.0
+    const y = 0.146 // Flush with road surface, seamlessly covering any land gaps
+    const zLeft = -95.0  // Northern forecourt boundary (reaching Building 951 & 952 and Road 430)
+    const zRight = 85.0  // Southern Bankim Setu boundary (reaching Road 41)
 
-    const pL1: V3 = [s, y1, zLeft]
-    const pR1: V3 = [s, y1, zRight]
-    const pR2: V3 = [s2, y2, zRight]
-    const pL2: V3 = [s2, y2, zLeft]
-    matte.quad(pL1, pR1, pR2, pL2, ASPHALT)
-
-    // Outer perimeter concrete curbs
-    matte.quad([s, y1, zLeft], [s, y1 + 0.12, zLeft], [s2, y2 + 0.12, zLeft], [s2, y2, zLeft], CONCRETE)
-    matte.quad([s, y1 + 0.12, zRight], [s, y1, zRight], [s2, y2, zRight], [s2, y2 + 0.12, zRight], CONCRETE)
-
-    // Dashed guide lines fanning across the Howrah junction
-    const smid = (s + s2) / 2
-    const ymid = deckY(smid)
-    for (const zl of [-28, -14, 0, 14, 28, 42]) {
-      matte.bar([smid - 1.2, ymid + 0.02, zl], [smid + 1.2, ymid + 0.02, zl], 0.02, 0.14, lin('#b9b3a4'))
-    }
+    // Normal points UP (+Y)
+    matte.quad([s, y, zLeft], [s, y, zRight], [s2, y, zRight], [s2, y, zLeft], ASPHALT)
   }
 
   // 2. KOLKATA BRIDGEHEAD PAVED PLAZA APRON (Eastern Bank):

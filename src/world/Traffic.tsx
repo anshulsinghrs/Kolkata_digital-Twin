@@ -9,10 +9,10 @@ import { BRIDGE, deckY, RAMP_END, roadCenterZ } from './Bridge'
 import { WATER_Y } from './constants'
 import { TrafficSignals, type SignalPhase, PHASE_DURATIONS } from './TrafficSignals'
 
-// Bridge bounds: spans Howrah station plaza (-370m) to Kolkata Road 2 junction (+352m)
-const BRIDGE_S_MIN = -370.0
+// Bridge bounds: spans Howrah station plaza (-375m) to Kolkata Road 2 junction (+352m)
+const BRIDGE_S_MIN = -375.0
 const BRIDGE_S_MAX = 352.0
-const BRIDGE_TOTAL_SPAN = BRIDGE_S_MAX - BRIDGE_S_MIN // 722.0 m total span
+const BRIDGE_TOTAL_SPAN = BRIDGE_S_MAX - BRIDGE_S_MIN // 727.0 m total span
 const TOTAL_HALF_SPAN = 340.0
 
 // Indian Left-Hand Drive Traffic Lane Layout on Howrah Bridge
@@ -919,10 +919,10 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
           }
         }
       }
-      // Check Howrah Station approach signal stop line at s = -320
-      if (v.isBridge && v.dir < 0 && v.s < -275 && v.s > -324) {
+      // Check Howrah Station approach signal stop line at s = -368 (Road 442 / Bankim Setu junction)
+      if (v.isBridge && v.dir < 0 && v.s < -320 && v.s > -372) {
         if (!isBridgeGreen) {
-          const distToStop = v.s - (-320)
+          const distToStop = v.s - (-368)
           const approachLimit = Math.max(0, distToStop - 2.5) * 1.5
           if (approachLimit < effectiveTargetSpeed) {
             effectiveTargetSpeed = approachLimit
