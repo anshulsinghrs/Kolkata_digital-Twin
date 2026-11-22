@@ -9,10 +9,10 @@ import { BRIDGE, deckY, RAMP_END, roadCenterZ } from './Bridge'
 import { WATER_Y } from './constants'
 import { TrafficSignals, type SignalPhase, PHASE_DURATIONS } from './TrafficSignals'
 
-// Bridge bounds: spans Howrah riverbank (-336m) to Kolkata Road 2 junction (+352m)
-const BRIDGE_S_MIN = -336.0
+// Bridge bounds: spans Howrah station plaza (-370m) to Kolkata Road 2 junction (+352m)
+const BRIDGE_S_MIN = -370.0
 const BRIDGE_S_MAX = 352.0
-const BRIDGE_TOTAL_SPAN = BRIDGE_S_MAX - BRIDGE_S_MIN // 688.0 m total span
+const BRIDGE_TOTAL_SPAN = BRIDGE_S_MAX - BRIDGE_S_MIN // 722.0 m total span
 const TOTAL_HALF_SPAN = 340.0
 
 // Indian Left-Hand Drive Traffic Lane Layout on Howrah Bridge

@@ -411,10 +411,25 @@ function bankGeometry(data: SceneData, ghatSpots: { x: number; z: number; half: 
 export function Ground({ data, ghatSpots }: { data: SceneData; ghatSpots: { x: number; z: number; half: number }[] }) {
   const ext = data.meta.half + data.meta.margin
   const land = useMemo(() => flatPolys(data.land.map(toPts), 0, () => lin('#8f8676')), [data])
-  const parks = useMemo(
-    () => flatPolys(data.parks.map((p) => toPts(p.p)), 0.05, (i) => (data.parks[i].k === 1 ? lin('#77803f') : lin('#4f6233'))),
-    [data],
-  )
+  const parks = useMemo(() => {
+    const b = data.bridge
+    const rotY = Math.atan2(-b.dz, b.dx)
+    const cos = Math.cos(rotY)
+    const sin = Math.sin(rotY)
+    const cleanedPolys = data.parks.map((p) => {
+      const pts = toPts(p.p)
+      return pts.filter(([x, z]) => {
+        const lx = (x - b.cx) * cos - (z - b.cz) * sin
+        const lz = (x - b.cx) * sin + (z - b.cz) * cos
+        // Carve out Kolkata bridgehead road plaza
+        if (lx >= 260 && lx <= 370 && lz >= -20 && lz <= 98) return false
+        // Carve out Howrah bridgehead road plaza
+        if (lx >= -380 && lx <= -220 && lz >= -65 && lz <= 85) return false
+        return true
+      })
+    }).filter((ps) => ps.length >= 3)
+    return flatPolys(cleanedPolys, 0.05, (i) => (data.parks[i]?.k === 1 ? lin('#77803f') : lin('#4f6233')))
+  }, [data])
   const ponds = useMemo(() => flatPolys(data.ponds.map(toPts), 0.06, () => lin('#2c3327')), [data])
   const ribbons = useMemo(() => ribbonGeometry(data), [data])
   const banks = useMemo(() => bankGeometry(data, ghatSpots), [data, ghatSpots])

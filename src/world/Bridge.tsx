@@ -29,10 +29,22 @@ export const KOLKATA_CONNECT_END = 352.0
 
 /** Centerline lateral position (Z in bridge frame, positive = South) */
 export function roadCenterZ(s: number): number {
-  if (s <= 326.0) return 0
+  if (s <= 275.0) return 0
+  if (s <= 302.4) {
+    const t = (s - 275.0) / (302.4 - 275.0)
+    return 5.4 * (t * t * (3 - 2 * t))
+  }
+  if (s <= 322.2) {
+    const t = (s - 302.4) / (322.2 - 302.4)
+    return 5.4 + (33.4 - 5.4) * (t * t * (3 - 2 * t))
+  }
+  if (s <= 337.2) {
+    const t = (s - 322.2) / (337.2 - 322.2)
+    return 33.4 + (58.2 - 33.4) * (t * t * (3 - 2 * t))
+  }
   if (s <= 352.0) {
-    const t = (s - 326.0) / (352.0 - 326.0)
-    return 88.0 * (t * t * (3 - 2 * t))
+    const t = (s - 337.2) / (352.0 - 337.2)
+    return 58.2 + (88.0 - 58.2) * (t * t * (3 - 2 * t))
   }
   return 88.0
 }
@@ -292,42 +304,66 @@ function buildBridge() {
     }
   }
 
-  // Kolkata Bridgehead Paved Plaza Apron:
-  // Seamlessly paves the entire triangular junction between the bridge portal and city roads,
-  // connecting directly into Road 2, Brabourne Flyover (429), Strand Road (431), and Road 751.
-  // Completely eliminates any unpaved sand/dirt gap or disconnected edge!
-  const P_S_START = 324.0
-  const P_S_END = 356.0
-  const P_STEP = 2.0
-  for (let s = P_S_START; s < P_S_END - 0.01; s += P_STEP) {
-    const s2 = Math.min(s + P_STEP, P_S_END)
+  // 1. HOWRAH BRIDGEHEAD PAVED JUNCTION PLAZA (Western Bank):
+  // Seamlessly connects the Howrah bridgehead directly into Howrah Station approach loops,
+  // Bankim Setu flyover (Road 41), Grand Trunk Road (Road 441), and Riverfront Boulevard.
+  // Paves the entire junction expanse with solid asphalt so the bridge physically merges with the road network.
+  const H_S_START = -375.0
+  const H_S_END = -280.0
+  const H_STEP = 3.0
+  for (let s = H_S_START; s < H_S_END - 0.01; s += H_STEP) {
+    const s2 = Math.min(s + H_STEP, H_S_END)
     const y1 = deckY(s)
     const y2 = deckY(s2)
-    const zCurved1 = roadCenterZ(s) + 12.0
-    const zCurved2 = roadCenterZ(s2) + 12.0
+    // Left boundary (South: towards Howrah Station complex & Grand Trunk Road)
+    // Right boundary (North: towards Bankim Setu elevated flyover loop)
+    const zLeft = -52.0
+    const zRight = 68.0
 
-    // Full trapezoidal asphalt apron spanning from northern boundary (-14.0m) to southern curved ramp edge
-    const pN1: V3 = [s, y1, -14.0]
+    const pL1: V3 = [s, y1, zLeft]
+    const pR1: V3 = [s, y1, zRight]
+    const pR2: V3 = [s2, y2, zRight]
+    const pL2: V3 = [s2, y2, zLeft]
+    matte.quad(pL1, pR1, pR2, pL2, ASPHALT)
+
+    // Outer perimeter concrete curbs
+    matte.quad([s, y1, zLeft], [s, y1 + 0.12, zLeft], [s2, y2 + 0.12, zLeft], [s2, y2, zLeft], CONCRETE)
+    matte.quad([s, y1 + 0.12, zRight], [s, y1, zRight], [s2, y2, zRight], [s2, y2 + 0.12, zRight], CONCRETE)
+
+    // Dashed guide lines fanning across the Howrah junction
+    const smid = (s + s2) / 2
+    const ymid = deckY(smid)
+    for (const zl of [-28, -14, 0, 14, 28, 42]) {
+      matte.bar([smid - 1.2, ymid + 0.02, zl], [smid + 1.2, ymid + 0.02, zl], 0.02, 0.14, lin('#b9b3a4'))
+    }
+  }
+
+  // 2. KOLKATA BRIDGEHEAD PAVED PLAZA APRON (Eastern Bank):
+  // Seamlessly connects the Kolkata bridgehead directly into Road 751, Road 2, Brabourne Flyover (429),
+  // Strand Road (431), and Strand Bank Road (731).
+  // Completely eliminates any unpaved sand/dirt gap or disconnected edge!
+  const K_S_START = 275.0
+  const K_S_END = 358.0
+  const K_STEP = 2.0
+  for (let s = K_S_START; s < K_S_END - 0.01; s += K_STEP) {
+    const s2 = Math.min(s + K_STEP, K_S_END)
+    const y1 = deckY(s)
+    const y2 = deckY(s2)
+    const zCurved1 = Math.max(14.0, roadCenterZ(s) + 14.0)
+    const zCurved2 = Math.max(14.0, roadCenterZ(s2) + 14.0)
+    const zNorth1 = -16.0
+    const zNorth2 = -16.0
+
+    // Full trapezoidal asphalt apron spanning from northern boundary to southern curved ramp edge
+    const pN1: V3 = [s, y1, zNorth1]
     const pS1: V3 = [s, y1, zCurved1]
     const pS2: V3 = [s2, y2, zCurved2]
-    const pN2: V3 = [s2, y2, -14.0]
+    const pN2: V3 = [s2, y2, zNorth2]
     matte.quad(pN1, pS1, pS2, pN2, ASPHALT)
 
     // Northern sidewalk and concrete curb flanking the plaza
-    matte.quad(
-      [s, y1 + 0.12, -18.0],
-      [s, y1 + 0.12, -14.0],
-      [s2, y2 + 0.12, -14.0],
-      [s2, y2 + 0.12, -18.0],
-      WALK
-    )
-    matte.quad(
-      [s, y1, -14.0],
-      [s, y1 + 0.12, -14.0],
-      [s2, y2 + 0.12, -14.0],
-      [s2, y2, -14.0],
-      CONCRETE
-    )
+    matte.quad([s, y1 + 0.12, zNorth1 - 4.0], [s, y1 + 0.12, zNorth1], [s2, y2 + 0.12, zNorth2], [s2, y2 + 0.12, zNorth2 - 4.0], WALK)
+    matte.quad([s, y1, zNorth1], [s, y1 + 0.12, zNorth1], [s2, y2 + 0.12, zNorth2], [s2, y2, zNorth2], CONCRETE)
   }
 
   // Straight-ahead approach carriageway continuation towards Strand Bank Road / Burrabazar

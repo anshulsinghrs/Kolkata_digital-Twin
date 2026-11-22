@@ -96,18 +96,28 @@ export function Trees({ data }: { data: SceneData }) {
     for (let i = 0; i < count; i++) {
       const x = data.trees[i * 4], z = data.trees[i * 4 + 1], s = data.trees[i * 4 + 2], h = data.trees[i * 4 + 3]
       
-      // Remove trees that fall on the bridge road, approach ramp, and main road connector corridor
+      // Remove trees that fall on the bridge road, approach ramp, and main road connector corridors
       const wx = x - cx
       const wz = z - cz
       const bridgeS = wx * dx + wz * dz
       const bridgeL = -wx * dz + wz * dx
-      if (Math.abs(bridgeS) <= 360 && Math.abs(bridgeL) <= 18) {
+
+      // Kolkata bridgehead plaza corridor
+      if (bridgeS >= 250 && bridgeS <= 380 && bridgeL >= -25 && bridgeL <= 110) {
         m.makeTranslation(0, -9999, 0)
         canopy.current.setMatrixAt(i, m)
         trunk.current.setMatrixAt(i, m)
         continue
       }
-      if (bridgeS >= 360 && bridgeS <= 568 && Math.abs(bridgeL) <= 22) {
+      // Howrah bridgehead plaza corridor
+      if (bridgeS <= -220 && bridgeS >= -385 && bridgeL >= -65 && bridgeL <= 85) {
+        m.makeTranslation(0, -9999, 0)
+        canopy.current.setMatrixAt(i, m)
+        trunk.current.setMatrixAt(i, m)
+        continue
+      }
+      // Main bridge span
+      if (Math.abs(bridgeS) <= 250 && Math.abs(bridgeL) <= 22) {
         m.makeTranslation(0, -9999, 0)
         canopy.current.setMatrixAt(i, m)
         trunk.current.setMatrixAt(i, m)
