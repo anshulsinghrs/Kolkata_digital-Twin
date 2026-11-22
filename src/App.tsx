@@ -205,7 +205,7 @@ export function App() {
   const fixedDpr = params.has('dpr')
   const [frozen, setFrozen] = useState(false)
   const [enableFog, setEnableFog] = useState(params.get('fog') === '1')
-  const [trafficMultiplier, setTrafficMultiplier] = useState(1.5)
+  const [trafficMultiplier, setTrafficMultiplier] = useState(1.0)
 
   // Stage 3: Live telemetry streaming with disk cache fallback
   const { telemetry, loading: telemLoading, error: telemError, refresh: telemRefresh } = useLiveData(20_000)
