@@ -15,11 +15,46 @@ function distToSegment(px: number, pz: number, x1: number, z1: number, x2: numbe
   }
 }
 
+type PolyBox = { minX: number; maxX: number; minZ: number; maxZ: number; pts: Pt[] }
+
+function buildPolyGrid(polys: number[][], cellSize: number) {
+  const grid = new Map<string, PolyBox[]>()
+  for (const flat of polys) {
+    if (flat.length < 6) continue
+    const pts = toPts(flat)
+    let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity
+    for (const [x, z] of pts) {
+      if (x < minX) minX = x
+      if (x > maxX) maxX = x
+      if (z < minZ) minZ = z
+      if (z > maxZ) maxZ = z
+    }
+    const box: PolyBox = { minX, maxX, minZ, maxZ, pts }
+    const cx0 = Math.floor(minX / cellSize), cx1 = Math.floor(maxX / cellSize)
+    const cz0 = Math.floor(minZ / cellSize), cz1 = Math.floor(maxZ / cellSize)
+    for (let cx = cx0; cx <= cx1; cx++) {
+      for (let cz = cz0; cz <= cz1; cz++) {
+        const k = `${cx},${cz}`
+        let arr = grid.get(k)
+        if (!arr) { arr = []; grid.set(k, arr) }
+        arr.push(box)
+      }
+    }
+  }
+  return (px: number, pz: number) => {
+    const arr = grid.get(`${Math.floor(px / cellSize)},${Math.floor(pz / cellSize)}`)
+    if (!arr) return false
+    for (const b of arr) {
+      if (px >= b.minX && px <= b.maxX && pz >= b.minZ && pz <= b.maxZ && inPoly(px, pz, b.pts)) return true
+    }
+    return false
+  }
+}
+
 /**
- * Surrounding urban context organised by real OpenStreetMap geometry:
- * - Railway corridors (Howrah Junction lines, South Eastern & Eastern Railway) are strictly cleared.
- * - Road networks dictate street frontage alignment (buildings face nearest OSM streets).
- * - River banks and existing OSM building footprints are respected.
+ * Complete-city urban fabric aligned to real OpenStreetMap streets, railways, waterbodies, and parks:
+ * - Fills the entire 26 km x 26 km Kolkata & Howrah metropolitan area + outer horizon ring
+ *   wherever OSM footprints are unmapped, respecting all real streets, rails, parks, ponds, wetlands, and riverbanks.
  */
 export function Context({ data }: { data: SceneData }) {
   const ref = useRef<THREE.InstancedMesh>(null!)
@@ -27,7 +62,7 @@ export function Context({ data }: { data: SceneData }) {
 
   const items = useMemo(() => {
     const r = rng(2024)
-    const river = toPts(data.river).filter((p) => Math.abs(p[0]) < ext + 3000 && Math.abs(p[1]) < ext + 3000)
+    const river = toPts(data.river).filter((p) => Math.abs(p[0]) < ext + 3500 && Math.abs(p[1]) < ext + 3500)
     const out: { x: number; z: number; w: number; d: number; h: number; rot: number; c: THREE.Color }[] = []
     const tones = [
       '#d9d2c1', '#c9c2b1', '#dcc588', '#d0b473', '#b9ad96',
@@ -35,11 +70,11 @@ export function Context({ data }: { data: SceneData }) {
       '#8f8a80', '#a8785c', '#ab6a4e', '#a09a8e'
     ].map((h) => new THREE.Color(h))
 
-    // 1. Spatial Hash for Railway Corridors (strict 24m exclusion zone)
-    const CELL_SIZE = 90
-    const railGrid = new Map<string, [number, number, number, number][]>()
+    const CELL_SIZE = 120
     const rkey = (cx: number, cz: number) => `${cx},${cz}`
 
+    // 1. Spatial Hash for Railway Corridors (22m exclusion zone)
+    const railGrid = new Map<string, [number, number, number, number][]>()
     for (const rail of data.rails) {
       for (let i = 0; i < rail.length - 2; i += 2) {
         const x1 = rail[i], z1 = rail[i + 1], x2 = rail[i + 2], z2 = rail[i + 3]
@@ -51,17 +86,14 @@ export function Context({ data }: { data: SceneData }) {
           for (let cz = minCz; cz <= maxCz; cz++) {
             const k = rkey(cx, cz)
             let arr = railGrid.get(k)
-            if (!arr) {
-              arr = []
-              railGrid.set(k, arr)
-            }
+            if (!arr) { arr = []; railGrid.set(k, arr) }
             arr.push([x1, z1, x2, z2])
           }
         }
       }
     }
 
-    const isNearRail = (px: number, pz: number, clearance = 24) => {
+    const isNearRail = (px: number, pz: number, clearance = 22) => {
       const cx = Math.floor(px / CELL_SIZE)
       const cz = Math.floor(pz / CELL_SIZE)
       for (let ox = -1; ox <= 1; ox++) {
@@ -76,7 +108,7 @@ export function Context({ data }: { data: SceneData }) {
       return false
     }
 
-    // 2. Spatial Hash for Road Networks (clearance + street-facing alignment)
+    // 2. Spatial Hash for Road & Runway Networks (clearance + street-facing alignment)
     const roadGrid = new Map<string, { x1: number; z1: number; x2: number; z2: number; halfW: number }[]>()
     for (const rd of data.roads) {
       const halfW = rd.w / 2
@@ -90,10 +122,7 @@ export function Context({ data }: { data: SceneData }) {
           for (let cz = minCz; cz <= maxCz; cz++) {
             const k = rkey(cx, cz)
             let arr = roadGrid.get(k)
-            if (!arr) {
-              arr = []
-              roadGrid.set(k, arr)
-            }
+            if (!arr) { arr = []; roadGrid.set(k, arr) }
             arr.push({ x1, z1, x2, z2, halfW })
           }
         }
@@ -123,26 +152,25 @@ export function Context({ data }: { data: SceneData }) {
       return { dist: minD, rot: bestRot, halfW }
     }
 
-    // 3. Spatial Hash for Existing OSM Buildings
-    const bldGrid = new Map<string, Pt[]>()
+    // 3. Spatial Hash for Existing OSM Buildings (all vertices + polygon containment)
+    const isInExistingBuilding = buildPolyGrid(data.buildings.map((b) => b.p), CELL_SIZE)
+    const bldPtsGrid = new Map<string, Pt[]>()
     for (const b of data.buildings) {
-      const cx = Math.floor(b.p[0] / CELL_SIZE)
-      const cz = Math.floor(b.p[1] / CELL_SIZE)
-      const k = rkey(cx, cz)
-      let arr = bldGrid.get(k)
-      if (!arr) {
-        arr = []
-        bldGrid.set(k, arr)
+      for (let i = 0; i < b.p.length; i += 2) {
+        const bx = b.p[i], bz = b.p[i + 1]
+        const k = rkey(Math.floor(bx / CELL_SIZE), Math.floor(bz / CELL_SIZE))
+        let arr = bldPtsGrid.get(k)
+        if (!arr) { arr = []; bldPtsGrid.set(k, arr) }
+        arr.push([bx, bz])
       }
-      arr.push([b.p[0], b.p[1]])
     }
-
-    const isNearBuilding = (px: number, pz: number, clearance = 16) => {
+    const isNearBuilding = (px: number, pz: number, clearance = 18) => {
+      if (isInExistingBuilding(px, pz)) return true
       const cx = Math.floor(px / CELL_SIZE)
       const cz = Math.floor(pz / CELL_SIZE)
       for (let ox = -1; ox <= 1; ox++) {
         for (let oz = -1; oz <= 1; oz++) {
-          const pts = bldGrid.get(rkey(cx + ox, cz + oz))
+          const pts = bldPtsGrid.get(rkey(cx + ox, cz + oz))
           if (!pts) continue
           for (const [bx, bz] of pts) {
             if (Math.hypot(px - bx, pz - bz) < clearance) return true
@@ -152,58 +180,95 @@ export function Context({ data }: { data: SceneData }) {
       return false
     }
 
-    const R = ext + 2200
-    const STEP = Math.max(72, Math.round(ext / 100))
+    // 4. Spatial Hash for Parks & Waterbodies (Maidan, Salt Lake parks, East Kolkata Wetlands, ponds)
+    const isInPark = buildPolyGrid(data.parks.map((p) => p.p), 200)
+    const isInPond = buildPolyGrid(data.ponds, 200)
 
-    // Traverse Kolkata and Howrah surroundings
+    // 5. Fast O(1) River Lookup Grid (40m cells within river bounding box)
+    let rMinX = Infinity, rMaxX = -Infinity, rMinZ = Infinity, rMaxZ = -Infinity
+    for (const [rx, rz] of river) {
+      if (rx < rMinX) rMinX = rx
+      if (rx > rMaxX) rMaxX = rx
+      if (rz < rMinZ) rMinZ = rz
+      if (rz > rMaxZ) rMaxZ = rz
+    }
+    const RCELL = 40
+    const rW = Math.max(1, Math.ceil((rMaxX - rMinX) / RCELL) + 1)
+    const rH = Math.max(1, Math.ceil((rMaxZ - rMinZ) / RCELL) + 1)
+    const riverMask = new Uint8Array(rW * rH)
+    for (let j = 0; j < rH; j++) {
+      const wz = rMinZ + (j + 0.5) * RCELL
+      for (let i = 0; i < rW; i++) {
+        const wx = rMinX + (i + 0.5) * RCELL
+        if (inPoly(wx, wz, river)) riverMask[j * rW + i] = 1
+      }
+    }
+    const isNearRiver = (px: number, pz: number) => {
+      if (px < rMinX - 40 || px > rMaxX + 40 || pz < rMinZ - 40 || pz > rMaxZ + 40) return false
+      const ci = Math.floor((px - rMinX) / RCELL)
+      const cj = Math.floor((pz - rMinZ) / RCELL)
+      for (let dj = -1; dj <= 1; dj++) {
+        const jj = cj + dj
+        if (jj < 0 || jj >= rH) continue
+        for (let di = -1; di <= 1; di++) {
+          const ii = ci + di
+          if (ii >= 0 && ii < rW && riverMask[jj * rW + ii]) return true
+        }
+      }
+      return false
+    }
+
+    const R = ext + 1200
+    const STEP = 72
+
+    // Populate the complete 26km x 26km Kolkata & Howrah urban fabric + outer horizon
     for (let z = -R; z <= R; z += STEP) {
       for (let x = -R; x <= R; x += STEP) {
-        const jx = x + (r() - 0.5) * 16
-        const jz = z + (r() - 0.5) * 16
-        const cheb = Math.max(Math.abs(jx), Math.abs(jz))
+        const jx = x + (r() - 0.5) * 26
+        const jz = z + (r() - 0.5) * 26
         const dist = Math.hypot(jx, jz)
-
-        // Strictly outside the mapped city boundary: context is ONLY for the distant horizon skyline beyond the city
-        if (cheb < ext + 15) continue
         if (dist > R) continue
 
-        // Thinning at distant horizon
-        const keep = 0.92 - 0.42 * ((dist - ext) / Math.max(1, R - ext)) - 0.18 * (0.5 + 0.5 * Math.sin(jx * 0.003 + jz * 0.003))
-        if (r() > keep) continue
+        // Keep Howrah Bridge & Station plaza completely clear
+        if (Math.abs(jx) < 520 && Math.abs(jz) < 300) continue
+        // Keep core hero Kolkata side (already 100% mapped with real OSM buildings) untouched
+        if (jx > -100 && jx < 2450 && Math.abs(jz) < 2450) continue
 
-        // River clearance (32m buffer)
-        if (inPoly(jx, jz, river)) continue
-        let nearRiver = false
-        for (const [ox, oz] of [[32, 0], [-32, 0], [0, 32], [0, -32]]) {
-          if (inPoly(jx + ox, jz + oz, river)) {
-            nearRiver = true
-            break
-          }
+        // Thinning only at the very outer horizon beyond ext
+        if (dist > ext) {
+          const keep = 0.85 - 0.45 * ((dist - ext) / Math.max(1, R - ext))
+          if (r() > keep) continue
+        } else {
+          // Slight natural courtyard/street-pocket variation (88% density)
+          if (r() > 0.88) continue
         }
-        if (nearRiver) continue
 
-        // Railway clearance (no building across train tracks)
+        // O(1) River, Park, Pond & Rail clearance
+        if (isNearRiver(jx, jz)) continue
+        if (isInPark(jx, jz) || isInPond(jx, jz)) continue
         if (isNearRail(jx, jz, 22)) continue
 
-        // Road clearance & alignment
+        // Road & Airport runway clearance (runways have halfW >= 18 -> keep wide 28m clearance)
         const roadInfo = checkRoadNear(jx, jz)
-        if (roadInfo.dist < roadInfo.halfW + 4) continue
+        const roadPad = roadInfo.halfW >= 18 ? 28 : 5
+        if (roadInfo.dist < roadInfo.halfW + roadPad) continue
 
-        // Orientation: align parallel/perpendicular to nearest road, or natural Kolkata cardinal grid
+        if (isNearBuilding(jx, jz, 20)) continue
+
+        // Orientation: align along nearest street frontage
         let rot: number
-        if (roadInfo.dist < 140) {
-          // Align along street frontage (either parallel or perpendicular with small organic variation)
+        if (roadInfo.dist < 220) {
           const flip = r() < 0.25 ? Math.PI / 2 : 0
           rot = roadInfo.rot + flip + (r() - 0.5) * 0.12
         } else {
-          // Cardinal street orientation with gentle organic drift
           rot = (r() < 0.5 ? 0 : Math.PI / 2) + (r() - 0.5) * 0.2
         }
 
-        const tall = r() > 0.95
-        const w = 12 + r() * 16
-        const d = 14 + r() * 18
-        const h = tall ? 24 + r() * 18 : 7 + r() * 14
+        const isNewTownOrSaltLake = jx > 3500 && jz > -3500 && jz < 3500
+        const tall = r() > (isNewTownOrSaltLake ? 0.78 : 0.92)
+        const w = 22 + r() * 24
+        const d = 22 + r() * 26
+        const h = tall ? 24 + r() * 28 : 9 + r() * 17
 
         out.push({
           x: jx,
