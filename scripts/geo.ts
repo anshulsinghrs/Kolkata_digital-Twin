@@ -1,7 +1,7 @@
 // One world frame for everything: metres, x east, y up, z south, origin at CENTER.
 export const CENTER = { lat: 22.5851, lon: 88.3468 }
-export const HALF = 2000 // core hero extent
-export const MARGIN = 6000 // full Kolkata metropolitan extent: 16 km x 16 km (+/- 8000 m)
+export const HALF = 3000 // core hero extent
+export const MARGIN = 10000 // full Kolkata + CCU Airport extent: 26 km x 26 km (+/- 13000 m)
 const R = 6378137
 const D2R = Math.PI / 180
 const KX = R * D2R * Math.cos(CENTER.lat * D2R)

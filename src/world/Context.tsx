@@ -153,7 +153,7 @@ export function Context({ data }: { data: SceneData }) {
     }
 
     const R = ext + 2200
-    const STEP = 72
+    const STEP = Math.max(72, Math.round(ext / 100))
 
     // Traverse Kolkata and Howrah surroundings
     for (let z = -R; z <= R; z += STEP) {

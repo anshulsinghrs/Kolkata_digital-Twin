@@ -84,7 +84,9 @@ const cityQuery = `[out:json][timeout:180][maxsize:536870912];
   way["building"]["name"](${bbCity});
   relation["building"](${bbCity});
   way["building"]["building:levels"](${bbCity});
-  way["building"~"apartments|commercial|office|public|civic|hospital|university|college|hotel|stadium|cathedral|train_station|retail|industrial|warehouse"](${bbCity});
+  way["building"~"apartments|commercial|office|public|civic|hospital|university|college|hotel|stadium|cathedral|train_station|terminal|retail|industrial|warehouse"](${bbCity});
+  way["aeroway"~"runway|taxiway|apron|terminal|hangar"](${bbCity});
+  relation["aeroway"~"apron|terminal"](${bbCity});
   way["highway"~"motorway|trunk|primary|secondary|tertiary|motorway_link|trunk_link|primary_link|secondary_link|tertiary_link"](${bbCity});
   way["railway"="rail"](${bbCity});
   way["natural"="water"](${bbCity});
@@ -98,7 +100,7 @@ const cityQuery = `[out:json][timeout:180][maxsize:536870912];
 );
 out body geom;`
 
-const cityJson = await queryOverpass(cityQuery, 'Complete Kolkata 16km x 16km')
+const cityJson = await queryOverpass(cityQuery, 'Complete Kolkata + CCU Airport 26km x 26km')
 
 const seen = new Set<string>()
 const merged: { type: string; id: number }[] = []

@@ -17,7 +17,7 @@ type El = {
 const raw = JSON.parse(readFileSync('data/osm-raw.json', 'utf8')) as { elements: El[]; osm3s?: { timestamp_osm_base?: string } }
 const els = raw.elements
 const EXT = HALF + MARGIN // buildings/roads kept inside this
-const FAR = 18000 // river and land polygons run out to here so the horizon is not an edge
+const FAR = 26000 // river and land polygons run out to here so the horizon is not an edge
 
 // ---------- geometry helpers ----------
 const proj = (g: { lat: number; lon: number }[]): Pt[] => g.map((p) => toWorld(p.lat, p.lon))
@@ -341,8 +341,8 @@ function addBuilding(id: number, tags: Record<string, string>, outer: Pt[], hole
 
 for (const e of els) {
   const t = e.tags || {}
-  if (e.type === 'way' && (t.building || t['building:part']) && e.geometry && e.geometry.length >= 4) {
-    addBuilding(e.id, { ...t, building: t.building || t['building:part'] }, proj(e.geometry), [])
+  if (e.type === 'way' && (t.building || t['building:part'] || t.aeroway === 'terminal' || t.aeroway === 'hangar') && e.geometry && e.geometry.length >= 4) {
+    addBuilding(e.id, { ...t, building: t.building || t['building:part'] || (t.aeroway === 'terminal' ? 'public' : 'warehouse') }, proj(e.geometry), [])
   } else if (e.type === 'relation' && t.building && e.members) {
     const outers = stitch(e.members.filter((m) => m.role === 'outer' && m.geometry).map((m) => proj(m.geometry!)))
     const inners = stitch(e.members.filter((m) => m.role === 'inner' && m.geometry).map((m) => proj(m.geometry!)))
@@ -393,6 +393,10 @@ for (const e of els) {
       w = Number(t.width)
     }
     for (const piece of clipLine(ps, EXT)) roads.push({ p: flat(piece), w, c })
+  } else if (t.aeroway === 'runway' || t.aeroway === 'taxiway') {
+    const ps = proj(e.geometry)
+    const w = t.aeroway === 'runway' ? (Number(t.width) || 45) : (Number(t.width) || 22)
+    for (const piece of clipLine(ps, EXT)) roads.push({ p: flat(piece), w, c: t.aeroway === 'runway' ? 0 : 1 })
   } else if (t.railway === 'rail' && !t.tunnel) {
     for (const piece of clipLine(proj(e.geometry), EXT)) rails.push(flat(piece))
   }
@@ -427,7 +431,7 @@ for (const e of els) {
 
 // ---------- trees ----------
 // occupancy grid: 0 free land, 1 building, 2 road, 3 rail/platform, 4 water
-const CELL = 8
+const CELL = 10
 const GN = Math.ceil((EXT * 2) / CELL)
 const grid = new Uint8Array(GN * GN)
 const gi = (x: number, z: number) => {
@@ -570,7 +574,7 @@ for (let z = -2800; z < 2800; z += 16)
 // ---------- unmapped-ground mask ----------
 // OSM building coverage is patchy (especially on the Howrah side). Where the map has land but
 // nothing drawn nearby, the ground gets a city-grain texture instead of bare earth. 1 = unmapped.
-const MCELL = 24
+const MCELL = 40
 const MN = Math.ceil((EXT * 2) / MCELL)
 const maskBytes = new Uint8Array(MN * MN)
 const parkPolys = parks.map((pk) => pts(pk.p))
