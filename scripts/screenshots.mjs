@@ -32,11 +32,12 @@ for (const id of ids) {
   const t0 = Date.now()
   const q = id.includes(',') ? `cam=${id}` : `shot=${id}`
   const name = id.includes(',') ? `cam_${id.replace(/,/g, '_')}` : id
-  await page.goto(`${base}/?${q}&dpr=${process.env.DPR || 1.25}&freeze=${process.env.FRAMES || 10}`)
+  await page.goto(`${base}/?${q}&dpr=${process.env.DPR || 1.25}&freeze=${process.env.FRAMES || 10}`, { waitUntil: 'networkidle' })
+  await page.waitForSelector('canvas', { timeout: 30000 })
   try {
-    await page.waitForFunction(() => window.__frozen === true, null, { timeout: 3500, polling: 200 })
+    await page.waitForFunction(() => window.__frozen === true, null, { timeout: 14000, polling: 250 })
   } catch {}
-  await page.waitForTimeout(1500)
+  await page.waitForTimeout(2500)
   await page.screenshot({ path: `${out}/${name}.png`, timeout: 120000 })
   const stats = await page.evaluate(() => window.__stats)
   console.log(id, `${((Date.now() - t0) / 1000).toFixed(1)}s`, JSON.stringify(stats))

@@ -405,8 +405,8 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
   }, [data.roads])
 
   // Setup Fleet across COMPLETE CITY: Howrah Bridge + All City Roads (both Kolkata and Howrah sides)
-  const MAX_INSTANCES = 1500
-  const MAX_LIGHTS = 5000
+  const MAX_INSTANCES = 2500
+  const MAX_LIGHTS = 7000
   const vehicles = useMemo<VehicleAgent[]>(() => {
     const list: VehicleAgent[] = []
     
@@ -522,21 +522,21 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
 
     // 2. Complete City Road Network Traffic across all OSM avenues & streets in Kolkata & Howrah
     if (cityRoadPaths.length > 0) {
-      const BRIDGEHEAD_ROADS = new Set([429, 431, 650, 818, 438, 439, 441, 508, 41, 221, 2, 751, 752, 33, 34, 20, 430, 436, 442])
-
       for (let pi = 0; pi < cityRoadPaths.length; pi++) {
         const path = cityRoadPaths[pi]
-        const isBridgehead = BRIDGEHEAD_ROADS.has(path.idx)
+        const p0 = path.pts[0]
+        const isBridgehead = Math.abs(p0[0]) <= 600 && Math.abs(p0[1]) <= 400
+        const inCore = Math.abs(p0[0]) <= 2600 && Math.abs(p0[1]) <= 2600
         const isArterial = path.c === 0 || path.w >= 10.0
 
         let numOnThisPath = 0
-        if (isBridgehead) {
-          numOnThisPath = Math.min(14, Math.max(3, Math.floor(path.totalLen / 28)))
+        if (isBridgehead && isArterial) {
+          numOnThisPath = Math.min(10, Math.max(2, Math.floor(path.totalLen / 35)))
         } else if (isArterial) {
-          numOnThisPath = Math.min(7, Math.max(2, Math.floor(path.totalLen / 45)))
-        } else if (path.totalLen >= 60) {
-          numOnThisPath = Math.min(3, Math.max(2, Math.floor(path.totalLen / 60)))
-        } else if (path.totalLen >= 25) {
+          numOnThisPath = inCore
+            ? Math.min(5, Math.max(1, Math.floor(path.totalLen / 75)))
+            : Math.min(3, Math.max(1, Math.floor(path.totalLen / 180)))
+        } else if (inCore && path.totalLen >= 60) {
           numOnThisPath = 1
         }
         if (numOnThisPath === 0) continue
@@ -611,6 +611,24 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
     }
     return list
   }, [cityRoadPaths])
+
+  const { bridgePeers, pathPeers } = useMemo(() => {
+    const bp: VehicleAgent[] = []
+    const pp = new Map<RoadPath, VehicleAgent[]>()
+    for (const v of vehicles) {
+      if (v.isBridge) {
+        bp.push(v)
+      } else if (v.path) {
+        let arr = pp.get(v.path)
+        if (!arr) {
+          arr = []
+          pp.set(v.path, arr)
+        }
+        arr.push(v)
+      }
+    }
+    return { bridgePeers: bp, pathPeers: pp }
+  }, [vehicles])
 
   // Pedestrians on Bridge Footpaths, Ghats, and Busy City Intersections
   const TOTAL_PEDS = 240
@@ -841,7 +859,7 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
     const isBridgeGreen = currentPhase === 'bridge_green'
     const isCrossGreen = currentPhase === 'cross_green'
 
-    // 1. Multi-Agent Simulation: Car-Following, Collision Avoidance, IDM
+    // 1. Multi-Agent Simulation: Car-Following, Collision Avoidance, IDM (corridor-grouped O(N))
     for (let i = 0; i < vehicles.length; i++) {
       const v = vehicles[i]
       const span = v.isBridge ? BRIDGE_TOTAL_SPAN : (v.path?.totalLen || 1000)
@@ -850,13 +868,10 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
       let leadSpeed = v.targetSpeed
       let leadAgent: VehicleAgent | null = null
 
-      for (let j = 0; j < vehicles.length; j++) {
-        if (i === j) continue
-        const other = vehicles[j]
-
-        // Compare only within same corridor and same direction
-        if (v.isBridge !== other.isBridge) continue
-        if (!v.isBridge && v.path !== other.path) continue
+      const peers = v.isBridge ? bridgePeers : (v.path ? pathPeers.get(v.path) || [] : [])
+      for (let j = 0; j < peers.length; j++) {
+        const other = peers[j]
+        if (other === v) continue
         if (other.dir !== v.dir) continue
 
         // Check lateral proximity

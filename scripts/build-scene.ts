@@ -17,7 +17,7 @@ type El = {
 const raw = JSON.parse(readFileSync('data/osm-raw.json', 'utf8')) as { elements: El[]; osm3s?: { timestamp_osm_base?: string } }
 const els = raw.elements
 const EXT = HALF + MARGIN // buildings/roads kept inside this
-const FAR = 12000 // river and land polygons run out to here so the horizon is not an edge
+const FAR = 18000 // river and land polygons run out to here so the horizon is not an edge
 
 // ---------- geometry helpers ----------
 const proj = (g: { lat: number; lon: number }[]): Pt[] => g.map((p) => toWorld(p.lat, p.lon))
@@ -367,6 +367,7 @@ for (const e of els) {
 
 // ---------- roads & rail ----------
 const ROAD: Record<string, [number, number]> = {
+  motorway: [28, 0], motorway_link: [16, 0],
   trunk: [26, 0], trunk_link: [16, 0],
   primary: [24, 0], primary_link: [14, 0],
   secondary: [18, 0], secondary_link: [12, 0],
@@ -426,7 +427,7 @@ for (const e of els) {
 
 // ---------- trees ----------
 // occupancy grid: 0 free land, 1 building, 2 road, 3 rail/platform, 4 water
-const CELL = 4
+const CELL = 8
 const GN = Math.ceil((EXT * 2) / CELL)
 const grid = new Uint8Array(GN * GN)
 const gi = (x: number, z: number) => {
@@ -545,29 +546,31 @@ for (const r of roads) {
     const b = ps[i + 1]
     const len = Math.hypot(b[0] - a[0], b[1] - a[1])
     if (len < 1) continue
+    const inCore = Math.max(Math.abs(a[0]), Math.abs(a[1])) <= 2600
+    const stepBase = inCore ? 16 : 45
     const dx = (b[0] - a[0]) / len
     const dz = (b[1] - a[1]) / len
-    for (let s = rnd() * 20; s < len; s += 16 + rnd() * 22) {
+    for (let s = rnd() * stepBase; s < len; s += stepBase + rnd() * 24) {
       const sg = rnd() < 0.5 ? -1 : 1
       const off = sg * (r.w / 2 + 2.6)
       const x = a[0] + dx * s - dz * off
       const z = a[1] + dz * s + dx * off
-      if (rnd() < 0.55 && freeAround(x, z, 0)) addTree(x, z, 0.7 + rnd() * 0.6, 7)
+      if (rnd() < (inCore ? 0.55 : 0.35) && freeAround(x, z, 0)) addTree(x, z, 0.7 + rnd() * 0.6, 7)
     }
   }
 }
-// open ground
-for (let z = -EXT + 10; z < EXT - 10; z += 14)
-  for (let x = -EXT + 10; x < EXT - 10; x += 14) {
+// open ground: dense in core 5.5km x 5.5km, parks & arterials cover outer Kolkata
+for (let z = -2800; z < 2800; z += 16)
+  for (let x = -2800; x < 2800; x += 16) {
     const px = x + rnd() * 10
     const pz = z + rnd() * 10
-    if (rnd() < 0.16 && freeAround(px, pz, 6)) addTree(px, pz, 0.8 + rnd() * 0.9, 8)
+    if (rnd() < 0.14 && freeAround(px, pz, 6)) addTree(px, pz, 0.8 + rnd() * 0.9, 8)
   }
 
 // ---------- unmapped-ground mask ----------
 // OSM building coverage is patchy (especially on the Howrah side). Where the map has land but
 // nothing drawn nearby, the ground gets a city-grain texture instead of bare earth. 1 = unmapped.
-const MCELL = 12
+const MCELL = 24
 const MN = Math.ceil((EXT * 2) / MCELL)
 const maskBytes = new Uint8Array(MN * MN)
 const parkPolys = parks.map((pk) => pts(pk.p))

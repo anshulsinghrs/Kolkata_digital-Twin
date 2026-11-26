@@ -364,7 +364,7 @@ export function App() {
       )}
 
       <div className="note">
-        Building footprints ({(h.tag + h.levels + h.est).toLocaleString()} OSM buildings), {data.roads.length.toLocaleString()} roads and {data.rails.length.toLocaleString()} rail corridors organized from OpenStreetMap (5 km extent). Surrounding fabric aligned to real street corridors. Map data © OpenStreetMap contributors.
+        Building footprints ({(h.tag + h.levels + h.est).toLocaleString()} OSM buildings), {data.roads.length.toLocaleString()} roads and {data.rails.length.toLocaleString()} rail corridors organized from OpenStreetMap ({Math.round(((data.meta.half + data.meta.margin) * 2) / 1000)} km extent). Surrounding fabric aligned to real street corridors. Map data © OpenStreetMap contributors.
       </div>
     </>
   )

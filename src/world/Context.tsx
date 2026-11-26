@@ -27,7 +27,7 @@ export function Context({ data }: { data: SceneData }) {
 
   const items = useMemo(() => {
     const r = rng(2024)
-    const river = toPts(data.river).filter((p) => Math.abs(p[0]) < 6500 && Math.abs(p[1]) < 6500)
+    const river = toPts(data.river).filter((p) => Math.abs(p[0]) < ext + 3000 && Math.abs(p[1]) < ext + 3000)
     const out: { x: number; z: number; w: number; d: number; h: number; rot: number; c: THREE.Color }[] = []
     const tones = [
       '#d9d2c1', '#c9c2b1', '#dcc588', '#d0b473', '#b9ad96',
@@ -152,8 +152,8 @@ export function Context({ data }: { data: SceneData }) {
       return false
     }
 
-    const R = 4500
-    const STEP = 36
+    const R = ext + 2200
+    const STEP = 72
 
     // Traverse Kolkata and Howrah surroundings
     for (let z = -R; z <= R; z += STEP) {
