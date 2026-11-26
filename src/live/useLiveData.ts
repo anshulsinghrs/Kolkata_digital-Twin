@@ -13,9 +13,21 @@ export function useLiveData(pollIntervalMs = 20_000) {
       if (isRefresh) setLoading(true)
       const endpoint = isRefresh ? '/api/live/refresh' : '/api/live'
       const options = isRefresh ? { method: 'POST' } : { method: 'GET' }
-      const res = await fetch(endpoint, options)
-      if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`)
-      const data = await res.json()
+      let data: any = null
+      try {
+        const res = await fetch(endpoint, options)
+        const ct = res.headers.get('content-type') || ''
+        if (res.ok && ct.includes('application/json')) {
+          data = await res.json()
+        }
+      } catch {
+        // Fall through to static cache fallback
+      }
+      if (!data) {
+        const fallback = await fetch('/data/live-cache.json')
+        if (!fallback.ok) throw new Error(`HTTP ${fallback.status}: ${fallback.statusText}`)
+        data = await fallback.json()
+      }
       const payload: LiveTelemetry = isRefresh && data.data ? data.data : data
       if (isMounted.current) {
         setTelemetry(payload)

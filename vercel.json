@@ -1,0 +1,7 @@
+{
+  "rewrites": [
+    { "source": "/api/scene", "destination": "/data/scene.json" },
+    { "source": "/api/live", "destination": "/data/live-cache.json" },
+    { "source": "/api/live/refresh", "destination": "/data/live-cache.json" }
+  ]
+}

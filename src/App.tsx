@@ -217,10 +217,24 @@ export function App() {
   const trains = telemetry?.station?.howrahTrains?.value?.activeServices ?? []
 
   useEffect(() => {
-    fetch('/api/scene')
-      .then((r) => (r.ok ? r.json() : r.json().then((j) => Promise.reject(new Error(j.error || r.statusText)))))
-      .then(setData)
-      .catch((e) => setError(String(e.message || e)))
+    const loadScene = async () => {
+      try {
+        const res = await fetch('/api/scene')
+        const ct = res.headers.get('content-type') || ''
+        if (res.ok && ct.includes('application/json')) {
+          setData(await res.json())
+          return
+        }
+      } catch {
+        // Fall through to static asset fallback
+      }
+      const fallback = await fetch('/data/scene.json')
+      if (!fallback.ok) {
+        throw new Error(`HTTP ${fallback.status}: ${fallback.statusText}`)
+      }
+      setData(await fallback.json())
+    }
+    loadScene().catch((e) => setError(String(e.message || e)))
   }, [])
 
   const shots = useMemo(() => (data ? makeShots(data) : []), [data])
