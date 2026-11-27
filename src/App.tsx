@@ -11,6 +11,7 @@ import { Buildings } from './world/Buildings'
 import { Ground } from './world/Ground'
 import { River } from './world/River'
 import { Bridge } from './world/Bridge'
+import { Landmarks } from './world/Landmarks'
 import { Trees } from './world/Trees'
 import { Context } from './world/Context'
 import { Effects } from './fx/Effects'
@@ -173,6 +174,7 @@ function World({
       <Lighting focus={focus} />
       <Ground data={data} ghatSpots={ghatSpots} />
       <River shape={riverShape} />
+      <Landmarks />
       <Buildings data={data} />
       <Trees data={data} />
       <Context data={data} />

@@ -50,7 +50,7 @@ export function makeShots(data: SceneData): Shot[] {
     { id: 'aerial', label: 'Aerial', position: [-420, 800, 2280], target: [40, 0, -220], fov: 42 },
     { id: 'city', label: 'Full Kolkata', position: [-2800, 3200, 6200], target: [800, 0, 1200], fov: 48 },
     { id: 'airport', label: 'Airport (CCU)', position: [11800, 650, -5600], target: [10268, 10, -7748], fov: 48 },
-    { id: 'maidan', label: 'Maidan & Victoria', position: [-180, 420, 4800], target: [350, 20, 3200], fov: 48 },
+    { id: 'maidan', label: 'Maidan & Victoria', position: [-950, 260, 5050], target: [-432, 25, 4486], fov: 48 },
     { id: 'river', label: 'River', position: [rx, 0.6, rz], target: [rtx, 30, rtz], fov: 46 },
     { id: 'deck', label: 'Bridge deck', position: [dx, DECK_Y + 4.0, dz], target: [dtx, DECK_Y + 30, dtz], fov: 58 },
     { id: 'ghat', label: 'Ghat', position: [gx, 1.72, gz], target: [gtx, 13, gtz], fov: 60 },
