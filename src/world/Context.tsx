@@ -219,20 +219,18 @@ export function Context({ data }: { data: SceneData }) {
     }
 
     const R = ext + 1200
-    const STEP = 72
+    const STEP = 60
 
     // Populate the complete 26km x 26km Kolkata & Howrah urban fabric + outer horizon
     for (let z = -R; z <= R; z += STEP) {
       for (let x = -R; x <= R; x += STEP) {
-        const jx = x + (r() - 0.5) * 26
-        const jz = z + (r() - 0.5) * 26
+        const jx = x + (r() - 0.5) * 24
+        const jz = z + (r() - 0.5) * 24
         const dist = Math.hypot(jx, jz)
         if (dist > R) continue
 
         // Keep Howrah Bridge & Station plaza completely clear
         if (Math.abs(jx) < 520 && Math.abs(jz) < 300) continue
-        // Keep core hero Kolkata side (already 100% mapped with real OSM buildings) untouched
-        if (jx > -100 && jx < 2450 && Math.abs(jz) < 2450) continue
 
         // Thinning only at the very outer horizon beyond ext
         if (dist > ext) {
@@ -253,7 +251,7 @@ export function Context({ data }: { data: SceneData }) {
         const roadPad = roadInfo.halfW >= 18 ? 28 : 5
         if (roadInfo.dist < roadInfo.halfW + roadPad) continue
 
-        if (isNearBuilding(jx, jz, 20)) continue
+        if (isNearBuilding(jx, jz, 16)) continue
 
         // Orientation: align along nearest street frontage
         let rot: number
