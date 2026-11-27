@@ -5,14 +5,14 @@ import { useGLTF } from '@react-three/drei'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import type { SceneData } from './types'
 import { toPts } from './types'
-import { BRIDGE, deckY, RAMP_END, roadCenterZ } from './Bridge'
+import { BRIDGE, deckY, RAMP_END, roadCenterZ, howrahConnPos } from './Bridge'
 import { WATER_Y } from './constants'
 import { TrafficSignals, type SignalPhase, PHASE_DURATIONS } from './TrafficSignals'
 
-// Bridge bounds: spans Howrah station plaza (-375m) to Kolkata Road 2 junction (+352m)
-const BRIDGE_S_MIN = -375.0
+// Bridge bounds: spans Howrah Road 41 connector (-395m) to Kolkata Road 2 junction (+352m)
+const BRIDGE_S_MIN = -395.0
 const BRIDGE_S_MAX = 352.0
-const BRIDGE_TOTAL_SPAN = BRIDGE_S_MAX - BRIDGE_S_MIN // 727.0 m total span
+const BRIDGE_TOTAL_SPAN = BRIDGE_S_MAX - BRIDGE_S_MIN // 747.0 m total span
 const TOTAL_HALF_SPAN = 340.0
 
 // Indian Left-Hand Drive Traffic Lane Layout on Howrah Bridge
@@ -934,10 +934,10 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
           }
         }
       }
-      // Check Howrah Station approach signal stop line at s = -368 (Road 442 / Bankim Setu junction)
-      if (v.isBridge && v.dir < 0 && v.s < -320 && v.s > -372) {
+      // Check Howrah Station approach signal stop line at s = -388 (Road 442 / Bankim Setu junction)
+      if (v.isBridge && v.dir < 0 && v.s < -335 && v.s > -392) {
         if (!isBridgeGreen) {
-          const distToStop = v.s - (-368)
+          const distToStop = v.s - (-388)
           const approachLimit = Math.max(0, distToStop - 2.5) * 1.5
           if (approachLimit < effectiveTargetSpeed) {
             effectiveTargetSpeed = approachLimit
@@ -1039,27 +1039,47 @@ export function Traffic({ data, speedFactor = 1.0 }: { data: SceneData; speedFac
       const v = vehicles[i]
 
       if (v.isBridge) {
-        // Howrah Bridge Local Coordinates with curved Kolkata approach merging smoothly into Road 2 & Brabourne Flyover
+        // Howrah Bridge Local Coordinates with curved Howrah (Road 41) & Kolkata (Road 2) approaches
         const localS = v.s
         const localY = deckY(localS)
-        const localZCenter = roadCenterZ(localS)
+        let posX: number
+        let posZ: number
+        let tx: number
+        let tz: number
 
-        // Compute tangent and normal along the road curve
-        const ds = 0.5
-        const z1 = roadCenterZ(localS - ds)
-        const z2 = roadCenterZ(localS + ds)
-        const dz = z2 - z1
-        const segLen = Math.hypot(2 * ds, dz) || 1
-        const tx = (2 * ds) / segLen
-        const tz = dz / segLen
+        if (localS < -327.6) {
+          const t = Math.min(1, (-localS - 327.6) / (395.0 - 327.6))
+          const [cx, cz] = howrahConnPos(t)
+          posX = cx
+          posZ = cz
+          const dt = 0.01
+          const [ax, az] = howrahConnPos(Math.max(0, t - dt))
+          const [bx, bz] = howrahConnPos(Math.min(1, t + dt))
+          // Increasing s corresponds to decreasing t
+          const dx = ax - bx
+          const dz = az - bz
+          const segLen = Math.hypot(dx, dz) || 1
+          tx = dx / segLen
+          tz = dz / segLen
+        } else {
+          posX = localS
+          posZ = roadCenterZ(localS)
+          const ds = 0.5
+          const z1 = roadCenterZ(localS - ds)
+          const z2 = roadCenterZ(localS + ds)
+          const dz = z2 - z1
+          const segLen = Math.hypot(2 * ds, dz) || 1
+          tx = (2 * ds) / segLen
+          tz = dz / segLen
+        }
 
         const nx = -tz
         const nz = tx
 
         // Vehicle position with lane offset along curve normal
-        const vx = localS + nx * v.laneOffset
+        const vx = posX + nx * v.laneOffset
         const vy = localY + 0.20
-        const vz = localZCenter + nz * v.laneOffset
+        const vz = posZ + nz * v.laneOffset
 
         // Road inclination slope along travel direction
         const nextY = deckY(localS + v.dir * 1.0)

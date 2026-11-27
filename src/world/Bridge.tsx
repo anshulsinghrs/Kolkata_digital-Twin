@@ -29,19 +29,6 @@ export const KOLKATA_CONNECT_END = 352.0
 
 /** Centerline lateral position (Z in bridge frame, positive = South) */
 export function roadCenterZ(s: number): number {
-  if (s < 0) {
-    // Howrah Bridgehead approach: curves south into Bankim Setu / Road 41 & Road 442
-    if (s >= -320.0) return 0
-    if (s >= -332.0) {
-      const t = (-s - 320.0) / (332.0 - 320.0)
-      return 4.0 * (t * t * (3 - 2 * t))
-    }
-    if (s >= -375.0) {
-      const t = (-s - 332.0) / (375.0 - 332.0)
-      return 4.0 + (60.5 - 4.0) * (t * t * (3 - 2 * t))
-    }
-    return 60.5
-  }
   if (s <= 275.0) return 0
   if (s <= 302.4) {
     const t = (s - 275.0) / (302.4 - 275.0)
@@ -60,6 +47,23 @@ export function roadCenterZ(s: number): number {
     return 58.2 + (88.0 - 58.2) * (t * t * (3 - 2 * t))
   }
   return 88.0
+}
+
+/** Smooth C1-continuous Hermite curve from Howrah Bridge portal [-327.6, 0] to Road 41 [-279.8, 60.5], clear of all buildings */
+export function howrahConnPos(t: number): [number, number] {
+  const u = Math.max(0, Math.min(1, t))
+  const h00 = 2 * u * u * u - 3 * u * u + 1
+  const h10 = u * u * u - 2 * u * u + u
+  const h01 = -2 * u * u * u + 3 * u * u
+  const h11 = u * u * u - u * u
+  const p0 = [-327.6, 0.0]
+  const v0 = [-45.0, 0.0]
+  const p1 = [-279.8, 60.5]
+  const v1 = [25.0, 55.0]
+  return [
+    h00 * p0[0] + h10 * v0[0] + h01 * p1[0] + h11 * v1[0],
+    h00 * p0[1] + h10 * v0[1] + h01 * p1[1] + h11 * v1[1],
+  ]
 }
 
 export const deckY = (s: number) => {
@@ -208,7 +212,7 @@ function buildBridge() {
   // smoothly curving into Road 41 / Bankim Setu on Howrah bank and Road 2 / Brabourne Flyover on Kolkata bank!
   const walkIn = B.zT + 1.0
   const walkOut = walkIn + B.walk
-  const sStart = -375.0
+  const sStart = -332.0
   const sEnd = 352.0
   const STEP = 3.0 // 3m steps for smooth curve geometry
 
@@ -324,18 +328,7 @@ function buildBridge() {
   const hConnPts: [number, number][] = []
   const N_H_CONN = 18
   for (let i = 0; i <= N_H_CONN; i++) {
-    const t = i / N_H_CONN
-    const h00 = 2 * t * t * t - 3 * t * t + 1
-    const h10 = t * t * t - 2 * t * t + t
-    const h01 = -2 * t * t * t + 3 * t * t
-    const h11 = t * t * t - t * t
-    const p0 = [-327.6, 0.0]
-    const v0 = [-35.0, 25.0]
-    const p1 = [-279.8, 60.5]
-    const v1 = [25.0, 55.0]
-    const s = h00 * p0[0] + h10 * v0[0] + h01 * p1[0] + h11 * v1[0]
-    const z = h00 * p0[1] + h10 * v0[1] + h01 * p1[1] + h11 * v1[1]
-    hConnPts.push([s, z])
+    hConnPts.push(howrahConnPos(i / N_H_CONN))
   }
 
   const CONN_W = 12.0 // 24m total width (matching Road 41 width of 24m)
